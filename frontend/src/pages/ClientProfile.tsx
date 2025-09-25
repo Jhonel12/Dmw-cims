@@ -4,17 +4,16 @@ import { useToast } from '../contexts/ToastContext';
 import { useModal } from '../hooks/useModal';
 import AddClientModal from '../components/modals/AddClientModal';
 import ClientTable from '../components/tables/ClientTable';
+import ClientSearchFilters from '../components/filters/ClientSearchFilters';
 import { clientService, type Client, type ClientStats } from '../services/clientService';
 
 
 const ClientProfile: React.FC = () => {
   const { showDanger } = useAlertDialog();
-  const { showSuccess } = useToast();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('All');
-  const [sortBy, setSortBy] = useState<string>('name');
-  const [isLoading, setIsLoading] = useState(false);
+  const { showSuccess, showError } = useToast();
   const [clients, setClients] = useState<Client[]>([]);
+  const [filteredClients, setFilteredClients] = useState<Client[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   const [stats, setStats] = useState<ClientStats>({
     total_clients: 0,
     verified_clients: 0,
@@ -30,26 +29,17 @@ const ClientProfile: React.FC = () => {
     loadStats();
   }, []);
 
-  // Load clients when search or filter changes
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      loadClients();
-    }, 300); // Debounce search
-
-    return () => clearTimeout(timeoutId);
-  }, [searchTerm, statusFilter]);
-
   const loadClients = async () => {
     try {
       setIsLoading(true);
       const response = await clientService.getClients({
-        search: searchTerm,
-        status: statusFilter === 'All' ? undefined : statusFilter,
         per_page: 50
       });
       setClients(response.data.data || []);
+      setFilteredClients(response.data.data || []);
     } catch (error) {
       console.error('Error loading clients:', error);
+      showError('Error', 'Failed to load clients. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -64,22 +54,111 @@ const ClientProfile: React.FC = () => {
     }
   };
 
+  const handleSearch = async (filters: any) => {
+    setIsLoading(true);
+    
+    try {
+      // Use the API service for search
+      const response = await clientService.getClients({
+        search: filters.search,
+        status: filters.status,
+        per_page: filters.per_page || 50,
+        // Add additional filters for API
+        sex: filters.sex,
+        place: filters.place,
+        civil_status: filters.civil_status,
+        sort_by: filters.sort_by,
+        sort_order: filters.sort_order
+      });
+      setFilteredClients(response.data.data || []);
+    } catch (error) {
+      console.error('Error searching clients:', error);
+      showError('Error', 'Failed to search clients. Please try again.');
+      // Fallback to local filtering
+      let filtered = [...clients];
+      
+      if (filters.search) {
+        filtered = filtered.filter(client => 
+          client.first_name.toLowerCase().includes(filters.search.toLowerCase()) ||
+          client.last_name.toLowerCase().includes(filters.search.toLowerCase()) ||
+          client.email.toLowerCase().includes(filters.search.toLowerCase()) ||
+          client.city.toLowerCase().includes(filters.search.toLowerCase()) ||
+          client.province.toLowerCase().includes(filters.search.toLowerCase()) ||
+          client.barangay.toLowerCase().includes(filters.search.toLowerCase()) ||
+          client.street.toLowerCase().includes(filters.search.toLowerCase())
+        );
+      }
 
-  // Since API handles filtering, we just need to sort the clients
-  const sortedClients = [...clients].sort((a, b) => {
-    switch (sortBy) {
-      case 'name':
-        return a.first_name.localeCompare(b.first_name);
-      case 'company':
-        return a.city.localeCompare(b.city);
-      case 'joinDate':
-        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-      case 'totalRecords':
-        return b.id - a.id; // Using ID as a proxy for records
-      default:
-        return 0;
+      if (filters.sex) {
+        filtered = filtered.filter(client => client.sex === filters.sex);
+      }
+
+      if (filters.place) {
+        filtered = filtered.filter(client => 
+          client.city.toLowerCase().includes(filters.place.toLowerCase()) ||
+          client.province.toLowerCase().includes(filters.place.toLowerCase()) ||
+          client.barangay.toLowerCase().includes(filters.place.toLowerCase()) ||
+          client.street.toLowerCase().includes(filters.place.toLowerCase())
+        );
+      }
+
+      if (filters.civil_status) {
+        filtered = filtered.filter(client => client.civil_status === filters.civil_status);
+      }
+
+      // Apply sorting
+      if (filters.sort_by) {
+        filtered.sort((a, b) => {
+          let aValue: any, bValue: any;
+          
+          switch (filters.sort_by) {
+            case 'first_name':
+              aValue = a.first_name;
+              bValue = b.first_name;
+              break;
+            case 'last_name':
+              aValue = a.last_name;
+              bValue = b.last_name;
+              break;
+            case 'city':
+              aValue = a.city;
+              bValue = b.city;
+              break;
+            case 'province':
+              aValue = a.province;
+              bValue = b.province;
+              break;
+            case 'age':
+              aValue = a.age;
+              bValue = b.age;
+              break;
+            case 'created_at':
+              aValue = new Date(a.created_at).getTime();
+              bValue = new Date(b.created_at).getTime();
+              break;
+            default:
+              return 0;
+          }
+
+          if (filters.sort_order === 'desc') {
+            return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
+          } else {
+            return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
+          }
+        });
+      }
+
+      setFilteredClients(filtered);
+    } finally {
+      setIsLoading(false);
     }
-  });
+  };
+
+  const handleClearFilters = () => {
+    setFilteredClients(clients);
+  };
+
+
 
 
   const handleDeleteClient = async (client: Client) => {
@@ -96,12 +175,16 @@ const ClientProfile: React.FC = () => {
         setIsLoading(true);
         await clientService.deleteClient(client.id);
         showSuccess('Success!', `${fullName} has been deleted successfully.`);
-        loadClients();
+        
+        // Update local state
+        setClients(prev => prev.filter(c => c.id !== client.id));
+        setFilteredClients(prev => prev.filter(c => c.id !== client.id));
+        
         loadStats();
       } catch (error: any) {
         console.error('Error deleting client:', error);
         const errorMessage = error.response?.data?.message || 'Failed to delete client. Please try again.';
-        showSuccess('Error', errorMessage);
+        showError('Error', errorMessage);
       } finally {
         setIsLoading(false);
       }
@@ -203,70 +286,19 @@ const ClientProfile: React.FC = () => {
       </div>
 
       {/* Search and Filters */}
-      <div className="card p-4">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1">
-            <label className="block text-xs font-medium text-gray-700 mb-2">Search</label>
-            <div className="relative">
-            <input
-              type="text"
-              placeholder="Search by name, email, city, or province..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="input pl-10"
-            />
-              <svg className="absolute left-3 top-3.5 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-            </div>
-          </div>
-          <div className="sm:w-40">
-            <label className="block text-xs font-medium text-gray-700 mb-2">Status</label>
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="select"
-            >
-              <option value="All">All Status</option>
-              <option value="Active">Verified</option>
-              <option value="Inactive">Unverified</option>
-              <option value="Pending">Pending</option>
-            </select>
-          </div>
-          <div className="sm:w-40">
-            <label className="block text-xs font-medium text-gray-700 mb-2">Sort By</label>
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              className="select"
-            >
-              <option value="name">Name</option>
-              <option value="company">City</option>
-              <option value="joinDate">Created Date</option>
-              <option value="totalRecords">ID</option>
-            </select>
-          </div>
-        </div>
-      </div>
+      <ClientSearchFilters 
+        onSearch={handleSearch}
+        onClear={handleClearFilters}
+        isLoading={isLoading}
+      />
 
       {/* Clients Table */}
       <ClientTable
-        clients={sortedClients}
+        clients={filteredClients}
         isLoading={isLoading}
         onEditClient={handleEditClient}
         onDeleteClient={handleDeleteClient}
       />
-
-      {/* Empty State */}
-      {sortedClients.length === 0 && (
-        <div className="card p-8 text-center">
-          <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-          </svg>
-          <h3 className="mt-2 text-sm font-medium text-gray-900">No clients found</h3>
-          <p className="mt-1 text-xs text-gray-500">Try adjusting your search or filter criteria.</p>
-        </div>
-      )}
 
       {/* Add Client Modal */}
       <AddClientModal

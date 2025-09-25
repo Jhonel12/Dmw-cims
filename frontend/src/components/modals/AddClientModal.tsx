@@ -790,6 +790,12 @@ const AddClientModal: React.FC<AddClientModalProps> = ({ isOpen, onClose, onSucc
     setIsLoading(true);
     
     try {
+      // Get the actual names from the selected options
+      const selectedProvince = provinces.find(p => p.value === formData.province);
+      const selectedCity = cities.find(c => c.value === formData.city);
+      const selectedBarangay = barangays.find(b => b.value === formData.barangay);
+      const selectedRegion = REGION_OPTIONS.find(r => r.value === formData.region);
+
       // Map form data to API format
       const apiData: APIClientFormData = {
         first_name: formData.firstName,
@@ -804,10 +810,10 @@ const AddClientModal: React.FC<AddClientModalProps> = ({ isOpen, onClose, onSucc
         social_classification_other: formData.socialClassificationOther,
         house_number: formData.houseNumber,
         street: formData.street,
-        barangay: formData.barangay,
-        city: formData.city,
-        province: formData.province,
-        region: formData.region,
+        barangay: selectedBarangay?.label || formData.barangay, // Use name if available, fallback to code
+        city: selectedCity?.label || formData.city, // Use name if available, fallback to code
+        province: selectedProvince?.label || formData.province, // Use name if available, fallback to code
+        region: selectedRegion?.label || formData.region, // Use name if available, fallback to code
         zip_code: formData.zipCode,
         telephone: formData.telephone,
         email: formData.email,

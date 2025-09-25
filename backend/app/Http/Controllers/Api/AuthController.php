@@ -1,10 +1,12 @@
 <?php
 
 namespace App\Http\Controllers\Api;
-use App\Models\User;
+
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
@@ -12,59 +14,93 @@ use Illuminate\Validation\ValidationException;
 class AuthController extends Controller
 {
     /**
-     * Login user and create token
+     * Register a new user
      */
-    public function login(Request $request)
+    public function register(Request $request): JsonResponse
     {
-        $validator = Validator::make($request->all(), [
-            'email' => 'required|email',
-            'password' => 'required|string',
-            'device_name' => 'nullable|string',
-        ], [
-            'email.required' => 'Email address is required',
-            'email.email' => 'Please enter a valid email address',
-            'password.required' => 'Password is required',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Validation failed',
-                'errors' => $validator->errors()
-            ], 422);
-        }
-
         try {
-            // Get the user via Eloquent
-            $user = User::where('email', $request->email)->first();
+            $validator = Validator::make($request->all(), [
+                'name' => 'required|string|max:255',
+                'email' => 'required|string|email|max:255|unique:users',
+                'password' => 'required|string|min:6|confirmed',
+                'user_role' => 'sometimes|in:admin,staff'
+            ]);
 
-            // Check if credentials are valid
-            if (!$user || !Hash::check($request->password, $user->password)) {
+            if ($validator->fails()) {
                 return response()->json([
-                    'status' => 'error',
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            $user = User::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+                'user_role' => $request->user_role ?? 'staff'
+            ]);
+
+            $token = $user->createToken('auth_token')->plainTextToken;
+
+            return response()->json([
+                'success' => true,
+                'message' => 'User registered successfully',
+                'data' => [
+                    'user' => [
+                        'id' => $user->id,
+                        'name' => $user->name,
+                        'email' => $user->email,
+                        'user_role' => $user->user_role,
+                        'email_verified_at' => $user->email_verified_at,
+                        'created_at' => $user->created_at,
+                        'updated_at' => $user->updated_at
+                    ],
+                    'token' => $token,
+                    'token_type' => 'Bearer'
+                ]
+            ], 201);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Registration failed',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Login user
+     */
+    public function login(Request $request): JsonResponse
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'email' => 'required|email',
+                'password' => 'required|string'
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            if (!Auth::attempt($request->only('email', 'password'))) {
+                return response()->json([
+                    'success' => false,
                     'message' => 'Invalid credentials'
                 ], 401);
             }
 
-            // Check if user is active
-            if (!$user->is_active) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Account is deactivated. Please contact administrator.'
-                ], 403);
-            }
-
-            // Get division name if exists
-            $divisionName = null;
-            if ($user->division_id) {
-                $divisionName = DB::table('divisions')->where('id', $user->division_id)->value('name');
-            }
-
-            // Create token with Sanctum
-            $token = $user->createToken($request->device_name ?? 'dmw-app')->plainTextToken;
+            $user = Auth::user();
+            $token = $user->createToken('auth_token')->plainTextToken;
 
             return response()->json([
-                'status' => 'success',
+                'success' => true,
                 'message' => 'Login successful',
                 'data' => [
                     'user' => [
@@ -72,44 +108,41 @@ class AuthController extends Controller
                         'name' => $user->name,
                         'email' => $user->email,
                         'user_role' => $user->user_role,
-                        'division_id' => $user->division_id,
-                        'division_name' => $divisionName,
-                        'avatar' => $user->avatar,
-                        'cover_photo' => $user->cover_photo,
-                        'cover_photo_position' => $user->cover_photo_position ?? 50.00,
-                        'is_active' => $user->is_active,
-                        'is_superadmin' => $user->is_superadmin,
+                        'email_verified_at' => $user->email_verified_at,
                         'created_at' => $user->created_at,
+                        'updated_at' => $user->updated_at
                     ],
                     'token' => $token,
-                    'token_type' => 'Bearer',
+                    'token_type' => 'Bearer'
                 ]
             ]);
 
         } catch (\Exception $e) {
             return response()->json([
-                'status' => 'error',
+                'success' => false,
                 'message' => 'Login failed',
                 'error' => $e->getMessage()
             ], 500);
         }
     }
+
     /**
-     * Logout user (revoke token)
+     * Logout user
      */
-    public function logout(Request $request)
+    public function logout(Request $request): JsonResponse
     {
         try {
+            // Revoke the current access token
             $request->user()->currentAccessToken()->delete();
 
             return response()->json([
-                'status' => 'success',
-                'message' => 'Logged out successfully'
+                'success' => true,
+                'message' => 'Logout successful'
             ]);
 
         } catch (\Exception $e) {
             return response()->json([
-                'status' => 'error',
+                'success' => false,
                 'message' => 'Logout failed',
                 'error' => $e->getMessage()
             ], 500);
@@ -117,131 +150,41 @@ class AuthController extends Controller
     }
 
     /**
-     * Get authenticated user profile
+     * Get current authenticated user
      */
-    public function profile(Request $request)
+    public function me(Request $request): JsonResponse
     {
         try {
-            $user = DB::table('users')
-                ->leftJoin('divisions', 'users.division_id', '=', 'divisions.id')
-                ->select('users.*', 'divisions.name as division_name')
-                ->where('users.id', $request->user()->id)
-                ->first();
+            $user = $request->user();
 
             if (!$user) {
                 return response()->json([
-                    'status' => 'error',
-                    'message' => 'User not found'
-                ], 404);
+                    'success' => false,
+                    'message' => 'User not authenticated'
+                ], 401);
             }
 
             return response()->json([
-                'status' => 'success',
+                'success' => true,
                 'data' => [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'user_role' => $user->user_role,
-                    'division_id' => $user->division_id,
-                    'division_name' => $user->division_name,
-                    'avatar' => $user->avatar,
-                    'cover_photo' => $user->cover_photo,
-                    'cover_photo_position' => $user->cover_photo_position ?? 50.00,
-                    'is_active' => $user->is_active,
-                    'is_superadmin' => $user->is_superadmin,
-                    'email_verified_at' => $user->email_verified_at,
-                    'created_at' => $user->created_at,
-                    'updated_at' => $user->updated_at,
+                    'user' => [
+                        'id' => $user->id,
+                        'name' => $user->name,
+                        'email' => $user->email,
+                        'user_role' => $user->user_role,
+                        'email_verified_at' => $user->email_verified_at,
+                        'created_at' => $user->created_at,
+                        'updated_at' => $user->updated_at
+                    ],
+                    'token' => $request->bearerToken(),
+                    'token_type' => 'Bearer'
                 ]
             ]);
 
         } catch (\Exception $e) {
             return response()->json([
-                'status' => 'error',
-                'message' => 'Failed to get profile',
-                'error' => $e->getMessage()
-            ], 500);
-        }
-    }
-
-    /**
-     * Update user profile
-     */
-    public function updateProfile(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'name' => 'sometimes|required|string|max:255',
-            'email' => 'sometimes|required|email|unique:users,email,' . $request->user()->id,
-            'password' => 'sometimes|required|string|min:8|confirmed',
-        ], [
-            'name.required' => 'Name is required',
-            'email.required' => 'Email address is required',
-            'email.email' => 'Please enter a valid email address',
-            'email.unique' => 'This email address is already registered',
-            'password.required' => 'Password is required',
-            'password.min' => 'Password must be at least 8 characters',
-            'password.confirmed' => 'Password confirmation does not match',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Validation failed',
-                'errors' => $validator->errors()
-            ], 422);
-        }
-
-        try {
-            $updateData = [
-                'updated_at' => now(),
-            ];
-
-            if ($request->filled('name')) {
-                $updateData['name'] = $request->name;
-            }
-
-            if ($request->filled('email')) {
-                $updateData['email'] = $request->email;
-            }
-
-            if ($request->filled('password')) {
-                $updateData['password'] = Hash::make($request->password);
-            }
-
-            DB::table('users')->where('id', $request->user()->id)->update($updateData);
-
-            // Get updated user with division info
-            $user = DB::table('users')
-                ->leftJoin('divisions', 'users.division_id', '=', 'divisions.id')
-                ->select('users.*', 'divisions.name as division_name')
-                ->where('users.id', $request->user()->id)
-                ->first();
-
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Profile updated successfully',
-                'data' => [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'user_role' => $user->user_role,
-                    'division_id' => $user->division_id,
-                    'division_name' => $user->division_name,
-                    'avatar' => $user->avatar,
-                    'cover_photo' => $user->cover_photo,
-                    'cover_photo_position' => $user->cover_photo_position ?? 50.00,
-                    'is_active' => $user->is_active,
-                    'is_superadmin' => $user->is_superadmin,
-                    'email_verified_at' => $user->email_verified_at,
-                    'created_at' => $user->created_at,
-                    'updated_at' => $user->updated_at,
-                ]
-            ]);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Failed to update profile',
+                'success' => false,
+                'message' => 'Failed to get user data',
                 'error' => $e->getMessage()
             ], 500);
         }
@@ -250,73 +193,76 @@ class AuthController extends Controller
     /**
      * Refresh token
      */
-    public function refresh(Request $request)
+    public function refresh(Request $request): JsonResponse
     {
         try {
             $user = $request->user();
-            $user->tokens()->delete();
-            $token = $user->createToken('dmw-app')->plainTextToken;
+
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'User not authenticated'
+                ], 401);
+            }
+
+            // Revoke current token
+            $request->user()->currentAccessToken()->delete();
+
+            // Create new token
+            $token = $user->createToken('auth_token')->plainTextToken;
 
             return response()->json([
-                'status' => 'success',
+                'success' => true,
                 'message' => 'Token refreshed successfully',
                 'data' => [
                     'token' => $token,
-                    'token_type' => 'Bearer',
+                    'token_type' => 'Bearer'
                 ]
             ]);
 
         } catch (\Exception $e) {
             return response()->json([
-                'status' => 'error',
-                'message' => 'Failed to refresh token',
+                'success' => false,
+                'message' => 'Token refresh failed',
                 'error' => $e->getMessage()
             ], 500);
         }
     }
 
     /**
-     * Get user permissions based on role
+     * Validate email format
      */
-    public function permissions(Request $request)
+    public function validateEmail(Request $request): JsonResponse
     {
-        try {
-            $user = DB::table('users')
-                ->leftJoin('divisions', 'users.division_id', '=', 'divisions.id')
-                ->select('users.*', 'divisions.name as division_name')
-                ->where('users.id', $request->user()->id)
-                ->first();
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email'
+        ]);
 
-            $permissions = [
-                'can_access_all_divisions' => in_array($user->user_role, ['admin', 'viewer', 'evaluator']),
-                'can_manage_users' => in_array($user->user_role, ['admin']),
-                'can_manage_divisions' => in_array($user->user_role, ['admin', 'manager']),
-                'can_manage_supplies' => in_array($user->user_role, ['admin', 'manager', 'staff']),
-                'can_view_reports' => in_array($user->user_role, ['admin', 'manager', 'viewer', 'evaluator']),
-                'can_export_data' => in_array($user->user_role, ['admin', 'manager', 'evaluator']),
-                'can_view_reports' => in_array($user->user_role, ['admin', 'manager', 'viewer', 'evaluator']),
-                'can_export_data' => in_array($user->user_role, ['admin', 'manager']),
-                'can_bulk_actions' => in_array($user->user_role, ['admin', 'manager']),
-                'can_evaluate_supplies' => in_array($user->user_role, ['admin', 'evaluator']),
-            ];
+        return response()->json([
+            'success' => !$validator->fails(),
+            'message' => $validator->fails() ? 'Invalid email format' : 'Valid email format'
+        ]);
+    }
 
+    /**
+     * Validate password strength
+     */
+    public function validatePassword(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'password' => 'required|string|min:6'
+        ]);
+
+        if ($validator->fails()) {
             return response()->json([
-                'status' => 'success',
-                'data' => [
-                    'user_role' => $user->user_role,
-                    'division_id' => $user->division_id,
-                    'division_name' => $user->division_name,
-                    'is_superadmin' => $user->is_superadmin,
-                    'permissions' => $permissions,
-                ]
+                'success' => false,
+                'message' => 'Password must be at least 6 characters long'
             ]);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Failed to get permissions',
-                'error' => $e->getMessage()
-            ], 500);
         }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Password is valid'
+        ]);
     }
 }

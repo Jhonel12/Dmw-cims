@@ -17,8 +17,7 @@ class ClientController extends Controller
     {
         try {
             $query = DB::table('clients')
-                ->whereNull('deleted_at')
-                ->orderBy('created_at', 'desc');
+                ->whereNull('deleted_at');
 
             // Search functionality
             if ($request->has('search') && $request->search) {
@@ -28,7 +27,9 @@ class ClientController extends Controller
                       ->orWhere('last_name', 'like', "%{$search}%")
                       ->orWhere('email', 'like', "%{$search}%")
                       ->orWhere('city', 'like', "%{$search}%")
-                      ->orWhere('province', 'like', "%{$search}%");
+                      ->orWhere('province', 'like', "%{$search}%")
+                      ->orWhere('barangay', 'like', "%{$search}%")
+                      ->orWhere('street', 'like', "%{$search}%");
                 });
             }
 
@@ -45,6 +46,35 @@ class ClientController extends Controller
                         $query->whereRaw('created_at = updated_at');
                         break;
                 }
+            }
+
+            // Filter by sex
+            if ($request->has('sex') && $request->sex) {
+                $query->where('sex', $request->sex);
+            }
+
+            // Filter by place (city, province, barangay, street)
+            if ($request->has('place') && $request->place) {
+                $place = $request->place;
+                $query->where(function($q) use ($place) {
+                    $q->where('city', 'like', "%{$place}%")
+                      ->orWhere('province', 'like', "%{$place}%")
+                      ->orWhere('barangay', 'like', "%{$place}%")
+                      ->orWhere('street', 'like', "%{$place}%");
+                });
+            }
+
+            // Filter by civil status
+            if ($request->has('civil_status') && $request->civil_status) {
+                $query->where('civil_status', $request->civil_status);
+            }
+
+            // Sorting
+            if ($request->has('sort_by') && $request->sort_by) {
+                $sortOrder = $request->get('sort_order', 'asc');
+                $query->orderBy($request->sort_by, $sortOrder);
+            } else {
+                $query->orderBy('created_at', 'desc');
             }
 
             // Pagination

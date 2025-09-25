@@ -43,10 +43,73 @@ class OFW extends Model
     ];
 
     /**
-     * Get the user that owns the OFW record.
+     * The attributes that should be hidden for serialization.
+     *
+     * @var array<int, string>
      */
-    public function user()
+    protected $hidden = [
+        'deleted_at',
+    ];
+
+    /**
+     * Scope to filter by sex
+     */
+    public function scopeBySex($query, $sex)
     {
-        return $this->belongsTo(User::class);
+        return $query->where('sex', $sex);
+    }
+
+    /**
+     * Scope to filter by country destination
+     */
+    public function scopeByCountry($query, $country)
+    {
+        return $query->where('countryDestination', $country);
+    }
+
+    /**
+     * Scope to filter by position
+     */
+    public function scopeByPosition($query, $position)
+    {
+        return $query->where('position', $position);
+    }
+
+    /**
+     * Scope to search by multiple fields
+     */
+    public function scopeSearch($query, $search)
+    {
+        return $query->where(function($q) use ($search) {
+            $q->where('nameOfWorker', 'like', "%{$search}%")
+              ->orWhere('position', 'like', "%{$search}%")
+              ->orWhere('countryDestination', 'like', "%{$search}%")
+              ->orWhere('employer', 'like', "%{$search}%")
+              ->orWhere('oecNumber', 'like', "%{$search}%");
+        });
+    }
+
+    /**
+     * Scope to filter by date range
+     */
+    public function scopeByDateRange($query, $startDate, $endDate)
+    {
+        return $query->whereBetween('departureDate', [$startDate, $endDate]);
+    }
+
+    /**
+     * Get the worker's full name
+     */
+    public function getFullNameAttribute()
+    {
+        return $this->nameOfWorker;
+    }
+
+    /**
+     * Get formatted departure date
+     */
+    public function getFormattedDepartureDateAttribute()
+    {
+        return $this->departureDate ? $this->departureDate->format('M d, Y') : null;
     }
 }

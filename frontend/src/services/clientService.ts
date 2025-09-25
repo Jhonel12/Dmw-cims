@@ -95,6 +95,11 @@ export const clientService = {
   async getClients(params?: {
     search?: string;
     status?: string;
+    sex?: string;
+    place?: string;
+    civil_status?: string;
+    sort_by?: string;
+    sort_order?: string;
     per_page?: number;
     page?: number;
   }): Promise<ClientListResponse> {

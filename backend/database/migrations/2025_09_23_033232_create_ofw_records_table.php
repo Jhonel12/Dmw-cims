@@ -19,9 +19,10 @@ return new class extends Migration
             $table->string('countryDestination'); // country of destination
             $table->text('address'); // full address
             $table->string('employer'); // employer name
-            $table->string('oecNumber')->unique(); // OEC / e-receipt number (merged field)
+            $table->string('oecNumber')->unique(); // OEC / e-receipt number
             $table->date('departureDate'); // departure date
             $table->timestamps(); // created_at, updated_at
+            $table->softDeletes(); // ✅ adds deleted_at timestamp
         });
     }
 

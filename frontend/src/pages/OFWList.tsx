@@ -9,34 +9,63 @@ import ConfirmModal from '../components/modals/ConfirmModal';
 import ofwService from '../services/OFWService';
 
 const OFWList: React.FC = () => {
-  const { showSuccess, showError, showWarning } = useToast();
-  const [ofwRecords, setOfwRecords] = useState<OFW[]>([]);
+  const { showSuccess, showError } = useToast();
   const [filteredRecords, setFilteredRecords] = useState<OFW[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [editingOFW, setEditingOFW] = useState<OFW | null>(null);
   const [deletingOFW, setDeletingOFW] = useState<OFW | null>(null);
   const editModal = useModal();
   const deleteModal = useModal();
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [currentFilters, setCurrentFilters] = useState<SearchFiltersType>({});
 
   // Load OFW records on component mount
   useEffect(() => {
     loadOFWRecords();
   }, []);
 
-  const loadOFWRecords = async () => {
-    setIsLoading(true);
+  const loadOFWRecords = async (page: number = 1, filters?: SearchFiltersType, isPagination: boolean = false) => {
+    // Set loading state based on whether this is pagination or initial load
+    if (isPagination) {
+      setIsLoading(true);
+    } else {
+      setIsInitialLoading(true);
+    }
+    
     try {
-      const response = await ofwService.getOFWRecords();
-      setOfwRecords(response.data);
+      const searchParams = {
+        ...filters,
+        page,
+        per_page: filters?.per_page || itemsPerPage
+      };
+      
+      const response = await ofwService.getOFWRecords(searchParams);
+      
+      // Handle paginated response
       setFilteredRecords(response.data);
+      setCurrentPage(response.current_page);
+      setTotalPages(response.last_page);
+      setTotalItems(response.total);
     } catch (error) {
       console.error('Error loading OFW records:', error);
       showError('Error', 'Failed to load OFW records. Please try again.');
       // Fallback to mock data for demonstration
-      setOfwRecords(mockData);
       setFilteredRecords(mockData);
+      setCurrentPage(1);
+      setTotalPages(1);
+      setTotalItems(mockData.length);
     } finally {
-      setIsLoading(false);
+      if (isPagination) {
+        setIsLoading(false);
+      } else {
+        setIsInitialLoading(false);
+      }
     }
   };
 
@@ -83,51 +112,31 @@ const OFWList: React.FC = () => {
     }
   ];
 
-  const refreshData = () => {
-    loadOFWRecords();
-  };
 
   const handleSearch = async (filters: SearchFiltersType) => {
-    setIsLoading(true);
-    
-    try {
-      // Use the API service for search
-      const response = await ofwService.getOFWRecords(filters);
-      setFilteredRecords(response.data);
-    } catch (error) {
-      console.error('Error searching OFW records:', error);
-      showError('Error', 'Failed to search OFW records. Please try again.');
-      // Fallback to local filtering
-      let filtered = [...ofwRecords];
-      
-      if (filters.search) {
-        filtered = filtered.filter(ofw => 
-          ofw.nameOfWorker.toLowerCase().includes(filters.search!.toLowerCase()) ||
-          ofw.position.toLowerCase().includes(filters.search!.toLowerCase()) ||
-          ofw.countryDestination.toLowerCase().includes(filters.search!.toLowerCase()) ||
-          ofw.employer.toLowerCase().includes(filters.search!.toLowerCase()) ||
-          ofw.oecNumber.toLowerCase().includes(filters.search!.toLowerCase())
-        );
-      }
-
-      if (filters.sex) {
-        filtered = filtered.filter(ofw => ofw.sex === filters.sex);
-      }
-
-      if (filters.country) {
-        filtered = filtered.filter(ofw => 
-          ofw.countryDestination === filters.country
-        );
-      }
-
-      setFilteredRecords(filtered);
-    } finally {
-      setIsLoading(false);
+    setCurrentPage(1); // Reset to first page when searching
+    setCurrentFilters(filters); // Store current filters
+    if (filters.per_page) {
+      setItemsPerPage(filters.per_page);
     }
+    await loadOFWRecords(1, filters);
   };
 
   const handleClearFilters = () => {
-    setFilteredRecords(ofwRecords);
+    setCurrentPage(1);
+    setItemsPerPage(10);
+    setCurrentFilters({});
+    loadOFWRecords(1);
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    // Preserve current filters when changing pages
+    const filtersToUse = {
+      ...currentFilters,
+      per_page: itemsPerPage
+    };
+    loadOFWRecords(page, filtersToUse, true); // true indicates this is pagination
   };
 
   const handleEdit = (ofw: OFW) => {
@@ -155,7 +164,6 @@ const OFWList: React.FC = () => {
       await ofwService.deleteOFWRecord(deletingOFW.id);
       
       // Update local state
-      setOfwRecords(prev => prev.filter(ofw => ofw.id !== deletingOFW.id));
       setFilteredRecords(prev => prev.filter(ofw => ofw.id !== deletingOFW.id));
       
       showSuccess('Success!', 'OFW record deleted successfully!');
@@ -200,6 +208,12 @@ const OFWList: React.FC = () => {
         onEdit={handleEdit}
         onDelete={handleDelete}
         isLoading={isLoading}
+        isInitialLoading={isInitialLoading}
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalItems={totalItems}
+        itemsPerPage={itemsPerPage}
+        onPageChange={handlePageChange}
       />
 
       {/* Edit Modal */}

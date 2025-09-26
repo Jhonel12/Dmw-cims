@@ -4,6 +4,7 @@ import { type Client } from '../../services/clientService';
 interface ClientTableProps {
   clients: Client[];
   isLoading: boolean;
+  isInitialLoading?: boolean;
   onEditClient: (client: Client) => void;
   onDeleteClient: (client: Client) => void;
 }
@@ -11,6 +12,7 @@ interface ClientTableProps {
 const ClientTable: React.FC<ClientTableProps> = ({
   clients,
   isLoading,
+  isInitialLoading = false,
   onEditClient,
   onDeleteClient
 }) => {
@@ -58,7 +60,15 @@ const ClientTable: React.FC<ClientTableProps> = ({
 
   return (
     <div className="card overflow-hidden">
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto relative">
+        {isLoading && !isInitialLoading && (
+          <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-10 flex items-center justify-center">
+            <div className="flex items-center space-x-2 text-gray-600">
+              <div className="w-4 h-4 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin"></div>
+              <span className="text-sm">Loading data...</span>
+            </div>
+          </div>
+        )}
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
@@ -72,8 +82,8 @@ const ClientTable: React.FC<ClientTableProps> = ({
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {isLoading === true ? (
-              // Show skeleton loading rows
+            {isInitialLoading === true ? (
+              // Show skeleton loading rows for initial load
               Array.from({ length: 5 }).map((_, index) => (
                 <SkeletonRow key={index} />
               ))

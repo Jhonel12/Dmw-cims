@@ -5,6 +5,9 @@ import OFWList from './pages/OFWList';
 import AddOFW from './pages/AddOFW';
 import Reports from './pages/Reports';
 import ClientProfile from './pages/ClientProfile';
+import AddClient from './pages/AddClient';
+import ClientReports from './pages/ClientReports';
+import Settings from './pages/Settings';
 import Login from './pages/auth/Login';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import { AlertDialogProvider } from './contexts/AlertDialogContext';
@@ -58,10 +61,24 @@ function App() {
                 </Layout>
               </ProtectedRoute>
             } />
+            <Route path="/add-client" element={
+              <ProtectedRoute>
+                <Layout>
+                  <AddClient />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/client-reports" element={
+              <ProtectedRoute>
+                <Layout>
+                  <ClientReports />
+                </Layout>
+              </ProtectedRoute>
+            } />
             <Route path="/settings" element={
               <ProtectedRoute>
                 <Layout>
-                  <div className="p-6"><h1 className="text-2xl font-bold">Settings</h1><p>Settings page coming soon...</p></div>
+                  <Settings />
                 </Layout>
               </ProtectedRoute>
             } />

@@ -3,17 +3,26 @@ import { useAlertDialog } from '../contexts/AlertDialogContext';
 import { useToast } from '../contexts/ToastContext';
 import { useModal } from '../hooks/useModal';
 import AddClientModal from '../components/modals/AddClientModal';
+import EditClientModal from '../components/modals/EditClientModal';
 import ClientTable from '../components/tables/ClientTable';
 import ClientSearchFilters from '../components/filters/ClientSearchFilters';
+import { Pagination } from '../components/pagination';
 import { clientService, type Client, type ClientStats } from '../services/clientService';
 
 
 const ClientProfile: React.FC = () => {
   const { showDanger } = useAlertDialog();
   const { showSuccess, showError } = useToast();
-  const [clients, setClients] = useState<Client[]>([]);
   const [filteredClients, setFilteredClients] = useState<Client[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const [editingClient, setEditingClient] = useState<Client | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [currentFilters, setCurrentFilters] = useState<any>({});
   const [stats, setStats] = useState<ClientStats>({
     total_clients: 0,
     verified_clients: 0,
@@ -29,19 +38,34 @@ const ClientProfile: React.FC = () => {
     loadStats();
   }, []);
 
-  const loadClients = async () => {
+  const loadClients = async (page: number = currentPage, perPage: number = itemsPerPage, isPagination: boolean = false) => {
     try {
-      setIsLoading(true);
+      // Set loading state based on whether this is pagination or initial load
+      if (isPagination) {
+        setIsLoading(true);
+      } else {
+        setIsInitialLoading(true);
+      }
+      
       const response = await clientService.getClients({
-        per_page: 50
+        per_page: perPage,
+        page: page
       });
-      setClients(response.data.data || []);
-      setFilteredClients(response.data.data || []);
+      
+      const clientsData = response.data.data || [];
+      setFilteredClients(clientsData);
+      setTotalPages(response.data.last_page || 1);
+      setTotalItems(response.data.total || 0);
+      setCurrentPage(response.data.current_page || 1);
     } catch (error) {
       console.error('Error loading clients:', error);
       showError('Error', 'Failed to load clients. Please try again.');
     } finally {
-      setIsLoading(false);
+      if (isPagination) {
+        setIsLoading(false);
+      } else {
+        setIsInitialLoading(false);
+      }
     }
   };
 
@@ -54,109 +78,71 @@ const ClientProfile: React.FC = () => {
     }
   };
 
-  const handleSearch = async (filters: any) => {
-    setIsLoading(true);
+  const loadClientsWithFilters = async (page: number = currentPage, perPage: number = itemsPerPage, filters: any = currentFilters, isPagination: boolean = false) => {
+    // Set loading state based on whether this is pagination or search/filter
+    if (isPagination) {
+      setIsLoading(true);
+    } else {
+      setIsInitialLoading(true);
+    }
     
     try {
-      // Use the API service for search
       const response = await clientService.getClients({
         search: filters.search,
         status: filters.status,
-        per_page: filters.per_page || 50,
+        per_page: perPage,
+        page: page,
         // Add additional filters for API
         sex: filters.sex,
         place: filters.place,
         civil_status: filters.civil_status,
-        sort_by: filters.sort_by,
-        sort_order: filters.sort_order
+        sort_by: filters.sort_by
       });
-      setFilteredClients(response.data.data || []);
-    } catch (error) {
-      console.error('Error searching clients:', error);
-      showError('Error', 'Failed to search clients. Please try again.');
-      // Fallback to local filtering
-      let filtered = [...clients];
       
-      if (filters.search) {
-        filtered = filtered.filter(client => 
-          client.first_name.toLowerCase().includes(filters.search.toLowerCase()) ||
-          client.last_name.toLowerCase().includes(filters.search.toLowerCase()) ||
-          client.email.toLowerCase().includes(filters.search.toLowerCase()) ||
-          client.city.toLowerCase().includes(filters.search.toLowerCase()) ||
-          client.province.toLowerCase().includes(filters.search.toLowerCase()) ||
-          client.barangay.toLowerCase().includes(filters.search.toLowerCase()) ||
-          client.street.toLowerCase().includes(filters.search.toLowerCase())
-        );
-      }
-
-      if (filters.sex) {
-        filtered = filtered.filter(client => client.sex === filters.sex);
-      }
-
-      if (filters.place) {
-        filtered = filtered.filter(client => 
-          client.city.toLowerCase().includes(filters.place.toLowerCase()) ||
-          client.province.toLowerCase().includes(filters.place.toLowerCase()) ||
-          client.barangay.toLowerCase().includes(filters.place.toLowerCase()) ||
-          client.street.toLowerCase().includes(filters.place.toLowerCase())
-        );
-      }
-
-      if (filters.civil_status) {
-        filtered = filtered.filter(client => client.civil_status === filters.civil_status);
-      }
-
-      // Apply sorting
-      if (filters.sort_by) {
-        filtered.sort((a, b) => {
-          let aValue: any, bValue: any;
-          
-          switch (filters.sort_by) {
-            case 'first_name':
-              aValue = a.first_name;
-              bValue = b.first_name;
-              break;
-            case 'last_name':
-              aValue = a.last_name;
-              bValue = b.last_name;
-              break;
-            case 'city':
-              aValue = a.city;
-              bValue = b.city;
-              break;
-            case 'province':
-              aValue = a.province;
-              bValue = b.province;
-              break;
-            case 'age':
-              aValue = a.age;
-              bValue = b.age;
-              break;
-            case 'created_at':
-              aValue = new Date(a.created_at).getTime();
-              bValue = new Date(b.created_at).getTime();
-              break;
-            default:
-              return 0;
-          }
-
-          if (filters.sort_order === 'desc') {
-            return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
-          } else {
-            return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
-          }
-        });
-      }
-
-      setFilteredClients(filtered);
+      const clientsData = response.data.data || [];
+      setFilteredClients(clientsData);
+      setTotalPages(response.data.last_page || 1);
+      setTotalItems(response.data.total || 0);
+      setCurrentPage(response.data.current_page || 1);
+    } catch (error) {
+      console.error('Error loading clients:', error);
+      showError('Error', 'Failed to load clients. Please try again.');
     } finally {
-      setIsLoading(false);
+      if (isPagination) {
+        setIsLoading(false);
+      } else {
+        setIsInitialLoading(false);
+      }
+    }
+  };
+
+  const handleSearch = async (filters: any) => {
+    // Store current filters
+    setCurrentFilters(filters);
+    
+    // Update items per page if changed and reset to page 1
+    if (filters.per_page && filters.per_page !== itemsPerPage) {
+      setItemsPerPage(filters.per_page);
+      setCurrentPage(1);
+      await loadClientsWithFilters(1, filters.per_page, filters);
+    } else {
+      await loadClientsWithFilters(currentPage, itemsPerPage, filters);
     }
   };
 
   const handleClearFilters = () => {
-    setFilteredClients(clients);
+    setCurrentFilters({});
+    setCurrentPage(1);
+    setItemsPerPage(10); // Reset to default
+    loadClients(1, 10);
   };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    // Use the current filters to maintain search state
+    loadClientsWithFilters(page, itemsPerPage, currentFilters, true); // true indicates this is pagination
+  };
+
 
 
 
@@ -177,7 +163,6 @@ const ClientProfile: React.FC = () => {
         showSuccess('Success!', `${fullName} has been deleted successfully.`);
         
         // Update local state
-        setClients(prev => prev.filter(c => c.id !== client.id));
         setFilteredClients(prev => prev.filter(c => c.id !== client.id));
         
         loadStats();
@@ -192,8 +177,20 @@ const ClientProfile: React.FC = () => {
   };
 
   const handleEditClient = (client: Client) => {
-    const fullName = `${client.first_name} ${client.middle_name ? client.middle_name + ' ' : ''}${client.last_name}${client.suffix ? ' ' + client.suffix : ''}`;
-    showSuccess('Info', `Edit functionality for ${fullName} will be implemented soon.`);
+    setEditingClient(client);
+    setIsEditModalOpen(true);
+  };
+
+  const handleClientUpdated = () => {
+    // Refresh the clients list
+    loadClients();
+    setEditingClient(null);
+    setIsEditModalOpen(false);
+  };
+
+  const handleCloseEditModal = () => {
+    setEditingClient(null);
+    setIsEditModalOpen(false);
   };
 
   const handleAddClient = () => {
@@ -296,8 +293,18 @@ const ClientProfile: React.FC = () => {
       <ClientTable
         clients={filteredClients}
         isLoading={isLoading}
+        isInitialLoading={isInitialLoading}
         onEditClient={handleEditClient}
         onDeleteClient={handleDeleteClient}
+      />
+
+      {/* Pagination */}
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalItems={totalItems}
+        itemsPerPage={itemsPerPage}
+        onPageChange={handlePageChange}
       />
 
       {/* Add Client Modal */}
@@ -305,6 +312,14 @@ const ClientProfile: React.FC = () => {
         isOpen={addClientModal.isOpen}
         onClose={addClientModal.close}
         onSuccess={handleAddClientSuccess}
+      />
+
+      {/* Edit Client Modal */}
+      <EditClientModal
+        isOpen={isEditModalOpen}
+        onClose={handleCloseEditModal}
+        client={editingClient}
+        onSuccess={handleClientUpdated}
       />
     </div>
   );

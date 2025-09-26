@@ -69,10 +69,24 @@ class ClientController extends Controller
                 $query->where('civil_status', $request->civil_status);
             }
 
+            // Filter by social classification
+            if ($request->has('social_classification') && $request->social_classification) {
+                $query->whereRaw("JSON_CONTAINS(social_classification, '\"{$request->social_classification}\"')");
+            }
+
+
+            // Filter by date range
+            if ($request->has('date_from') && $request->date_from) {
+                $query->whereDate('created_at', '>=', $request->date_from);
+            }
+
+            if ($request->has('date_to') && $request->date_to) {
+                $query->whereDate('created_at', '<=', $request->date_to);
+            }
+
             // Sorting
             if ($request->has('sort_by') && $request->sort_by) {
-                $sortOrder = $request->get('sort_order', 'asc');
-                $query->orderBy($request->sort_by, $sortOrder);
+                $query->orderBy($request->sort_by, 'asc');
             } else {
                 $query->orderBy('created_at', 'desc');
             }
@@ -118,7 +132,7 @@ class ClientController extends Controller
                 'civil_status' => 'required|in:Single,Married,Widowed,Divorced,Separated',
                 'sex' => 'required|in:Male,Female',
                 'social_classification' => 'required|array|min:1',
-                'social_classification.*' => 'string|in:OFW,Indigenous People,Senior Citizen,Youth,Others',
+                'social_classification.*' => 'string|in:Abled,Differently Abled,Migrant Workers,4Ps,4Ps Beneficiary,OFW,Indigenous People,Senior Citizen,Youth,Solo Parent,Others',
                 'social_classification_other' => 'nullable|string|max:255',
                 'house_number' => 'required|string|max:255',
                 'street' => 'required|string|max:255',
@@ -265,7 +279,7 @@ class ClientController extends Controller
                 'civil_status' => 'sometimes|required|in:Single,Married,Widowed,Divorced,Separated',
                 'sex' => 'sometimes|required|in:Male,Female',
                 'social_classification' => 'sometimes|required|array|min:1',
-                'social_classification.*' => 'string|in:OFW,Indigenous People,Senior Citizen,Youth,Others',
+                'social_classification.*' => 'string|in:Abled,Differently Abled,Migrant Workers,4Ps,4Ps Beneficiary,OFW,Indigenous People,Senior Citizen,Youth,Solo Parent,Others',
                 'social_classification_other' => 'nullable|string|max:255',
                 'house_number' => 'sometimes|required|string|max:255',
                 'street' => 'sometimes|required|string|max:255',

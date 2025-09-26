@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useCountries } from '../../hooks/useCountries';
+import { Pagination } from '../pagination';
 import type { OFW } from '../../types/ofw';
 
 interface OFWTableProps {
@@ -7,9 +8,27 @@ interface OFWTableProps {
   onEdit: (ofw: OFW) => void;
   onDelete: (ofw: OFW) => void;
   isLoading?: boolean;
+  isInitialLoading?: boolean;
+  // Pagination props
+  currentPage?: number;
+  totalPages?: number;
+  totalItems?: number;
+  itemsPerPage?: number;
+  onPageChange?: (page: number) => void;
 }
 
-const OFWTable: React.FC<OFWTableProps> = ({ data, onEdit, onDelete, isLoading = false }) => {
+const OFWTable: React.FC<OFWTableProps> = ({ 
+  data, 
+  onEdit, 
+  onDelete, 
+  isLoading = false,
+  isInitialLoading = false,
+  currentPage = 1,
+  totalPages = 1,
+  totalItems = 0,
+  itemsPerPage = 10,
+  onPageChange
+}) => {
   const { countries } = useCountries();
   const [sortField, setSortField] = useState<keyof OFW>('nameOfWorker');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
@@ -45,24 +64,76 @@ const OFWTable: React.FC<OFWTableProps> = ({ data, onEdit, onDelete, isLoading =
     return country?.flag || '';
   };
 
-  if (isLoading) {
+  // Skeleton loading component for initial load
+  const SkeletonRow = () => (
+    <tr className="animate-pulse">
+      <td className="px-3 py-2 whitespace-nowrap">
+        <div className="flex items-center">
+          <div className="w-6 h-6 bg-gray-300 rounded-full"></div>
+          <div className="ml-2">
+            <div className="h-3 bg-gray-300 rounded w-28 mb-1"></div>
+          </div>
+        </div>
+      </td>
+      <td className="px-3 py-2 whitespace-nowrap">
+        <div className="h-4 bg-gray-300 rounded-full w-12"></div>
+      </td>
+      <td className="px-3 py-2 whitespace-nowrap">
+        <div className="h-3 bg-gray-300 rounded w-20"></div>
+      </td>
+      <td className="px-3 py-2 whitespace-nowrap">
+        <div className="flex items-center">
+          <div className="w-6 h-4 bg-gray-300 rounded-sm mr-2"></div>
+          <div className="h-3 bg-gray-300 rounded w-24"></div>
+        </div>
+      </td>
+      <td className="px-3 py-2 whitespace-nowrap">
+        <div className="h-3 bg-gray-300 rounded w-32"></div>
+      </td>
+      <td className="px-3 py-2 whitespace-nowrap">
+        <div className="h-3 bg-gray-300 rounded w-16"></div>
+      </td>
+      <td className="px-3 py-2 whitespace-nowrap">
+        <div className="flex space-x-1">
+          <div className="h-4 bg-gray-300 rounded w-8"></div>
+          <div className="h-4 bg-gray-300 rounded w-8"></div>
+        </div>
+      </td>
+    </tr>
+  );
+
+  // Show skeleton loading for initial load
+  if (isInitialLoading) {
     return (
-      <div className="card-elevated p-4">
-        <div className="animate-pulse space-y-4">
+      <div className="card-elevated overflow-hidden">
+        <div className="px-4 py-3 border-b border-gray-200/60 bg-gradient-to-r from-gray-50 to-gray-100/50">
           <div className="flex items-center justify-between">
-            <div className="h-5 bg-gray-200 rounded w-40"></div>
-            <div className="h-4 bg-gray-200 rounded w-20"></div>
+            <div>
+              <h3 className="text-lg font-bold text-gray-900">OFW Records</h3>
+              <p className="text-xs text-gray-600 mt-1">Loading records...</p>
+            </div>
           </div>
-          <div className="space-y-3">
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="flex space-x-3">
-                <div className="h-4 bg-gray-200 rounded flex-1"></div>
-                <div className="h-4 bg-gray-200 rounded w-16"></div>
-                <div className="h-4 bg-gray-200 rounded w-20"></div>
-                <div className="h-4 bg-gray-200 rounded w-12"></div>
-              </div>
-            ))}
-          </div>
+        </div>
+        
+        <div className="overflow-x-auto">
+          <table className="table">
+            <thead className="table-header">
+              <tr>
+                <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Name</th>
+                <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Sex</th>
+                <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Position</th>
+                <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Country</th>
+                <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Employer</th>
+                <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Departure</th>
+                <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="table-body">
+              {Array.from({ length: 5 }).map((_, index) => (
+                <SkeletonRow key={index} />
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
     );
@@ -74,7 +145,16 @@ const OFWTable: React.FC<OFWTableProps> = ({ data, onEdit, onDelete, isLoading =
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-lg font-bold text-gray-900">OFW Records</h3>
-            <p className="text-xs text-gray-600 mt-1">Total records: {data.length}</p>
+            <div className="text-xs text-gray-600 mt-1">
+              {isLoading ? (
+                <span className="flex items-center space-x-2">
+                  <div className="w-3 h-3 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin"></div>
+                  <span>Loading...</span>
+                </span>
+              ) : (
+                `Total records: ${data.length}`
+              )}
+            </div>
           </div>
           <div className="flex items-center space-x-2">
             <div className="flex items-center space-x-1 text-xs text-gray-500">
@@ -91,7 +171,15 @@ const OFWTable: React.FC<OFWTableProps> = ({ data, onEdit, onDelete, isLoading =
         </div>
       </div>
       
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto relative">
+        {isLoading && (
+          <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-10 flex items-center justify-center">
+            <div className="flex items-center space-x-2 text-gray-600">
+              <div className="w-4 h-4 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin"></div>
+              <span className="text-sm">Loading data...</span>
+            </div>
+          </div>
+        )}
         <table className="table">
           <thead className="table-header">
             <tr>
@@ -277,6 +365,17 @@ const OFWTable: React.FC<OFWTableProps> = ({ data, onEdit, onDelete, isLoading =
             Add First Record
           </button>
         </div>
+      )}
+
+      {/* Pagination */}
+      {onPageChange && totalPages > 1 && (
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalItems={totalItems}
+          itemsPerPage={itemsPerPage}
+          onPageChange={onPageChange}
+        />
       )}
     </div>
   );

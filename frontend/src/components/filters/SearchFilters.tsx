@@ -1,10 +1,8 @@
 import React, { useState } from 'react';
 import Select from 'react-select';
 import CountrySelect from '../ui/CountrySelect';
-import Calendar from '../forms/Calendar';
 import { useCountries } from '../../hooks/useCountries';
 import type { SearchFilters as SearchFiltersType } from '../../types/ofw';
-import { POSITIONS as POSITION_OPTIONS } from '../../constants/positions';
 
 interface SearchFiltersProps {
   onSearch: (filters: SearchFiltersType) => void;
@@ -20,12 +18,15 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ onSearch, onClear, isLoad
     country: '',
     sort_by: '',
     sort_order: 'asc',
-    per_page: 15,
+    per_page: 10,
     page: 1
   } as SearchFiltersType);
 
   const handleChange = (field: keyof SearchFiltersType, value: string) => {
-    setFilters(prev => ({ ...prev, [field]: value }));
+    setFilters(prev => ({ 
+      ...prev, 
+      [field]: field === 'per_page' || field === 'page' ? parseInt(value) || 1 : value 
+    }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -40,7 +41,7 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ onSearch, onClear, isLoad
       country: '',
       sort_by: '',
       sort_order: 'asc',
-      per_page: 15,
+      per_page: 10,
       page: 1
     } as SearchFiltersType);
     onClear();
@@ -121,13 +122,19 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ onSearch, onClear, isLoad
             </select>
           </div>
 
-          {/* Position Filter */}
+          {/* Sort By Filter */}
           <div>
             <label className="block text-xs font-medium text-gray-700 mb-1">
               Sort By
             </label>
             <Select
-              value={POSITION_OPTIONS.find(option => option.value === filters.sort_by) || null}
+              value={[
+                { value: 'nameOfWorker', label: 'Name' },
+                { value: 'position', label: 'Position' },
+                { value: 'countryDestination', label: 'Country' },
+                { value: 'departureDate', label: 'Departure Date' },
+                { value: 'created_at', label: 'Created Date' }
+              ].find(option => option.value === filters.sort_by) || null}
               onChange={(selectedOption: any) => handleChange('sort_by', selectedOption?.value || '')}
               options={[
                 { value: 'nameOfWorker', label: 'Name' },
@@ -185,11 +192,11 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ onSearch, onClear, isLoad
               onChange={(e) => handleChange('per_page', e.target.value)}
               className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
+              <option value={5}>5</option>
               <option value={10}>10</option>
               <option value={15}>15</option>
               <option value={25}>25</option>
               <option value={50}>50</option>
-              <option value={100}>100</option>
             </select>
           </div>
         </div>

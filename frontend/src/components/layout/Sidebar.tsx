@@ -109,6 +109,16 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, collapsed, onToggleC
             </svg>
           ),
           description: 'Create New Client Profile'
+        },
+        { 
+          path: '/client-reports', 
+          label: 'Client Reports', 
+          icon: (
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+          ),
+          description: 'Generate Client Reports'
         }
       ]
     },
@@ -231,6 +241,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, collapsed, onToggleC
                           {item.path === '/add-client' && (
                             <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
                           )}
+                          {item.path === '/client-reports' && (
+                            <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse"></div>
+                          )}
                           {item.path === '/settings' && (
                             <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
                           )}
@@ -242,6 +255,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, collapsed, onToggleC
                             )}
                             {item.path === '/add-client' && (
                               <div className="absolute top-1 right-1 w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
+                            )}
+                            {item.path === '/client-reports' && (
+                              <div className="absolute top-1 right-1 w-2 h-2 bg-purple-400 rounded-full animate-pulse"></div>
                             )}
                             {item.path === '/settings' && (
                               <div className="absolute top-1 right-1 w-2 h-2 bg-gray-400 rounded-full"></div>

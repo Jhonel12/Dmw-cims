@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ClientController;
 use App\Http\Controllers\Api\OFWController;
+use App\Http\Controllers\Api\UserController;
 
 /*
 |--------------------------------------------------------------------------
@@ -60,6 +61,18 @@ Route::middleware('auth:sanctum')->prefix('ofw')->group(function () {
     Route::delete('/{id}', [OFWController::class, 'destroy']);             // DELETE /api/ofw/{id}
     Route::post('/{id}/restore', [OFWController::class, 'restore']);       // POST /api/ofw/{id}/restore
     Route::delete('/{id}/force', [OFWController::class, 'forceDelete']);   // DELETE /api/ofw/{id}/force
+});
+
+// User management routes (protected)
+Route::middleware('auth:sanctum')->prefix('users')->group(function () {
+    Route::get('/', [UserController::class, 'getUsers']);                  // GET /api/users
+    Route::get('/stats', [UserController::class, 'getUserStats']);         // GET /api/users/stats
+    Route::post('/', [UserController::class, 'createUser']);               // POST /api/users
+    Route::get('/{id}', [UserController::class, 'getUser']);               // GET /api/users/{id}
+    Route::put('/{id}', [UserController::class, 'updateUser']);            // PUT /api/users/{id}
+    Route::delete('/{id}', [UserController::class, 'deleteUser']);         // DELETE /api/users/{id}
+    Route::put('/profile', [UserController::class, 'updateProfile']);      // PUT /api/users/profile
+    Route::put('/password', [UserController::class, 'changePassword']);    // PUT /api/users/password
 });
 
 // Test route to verify API is working

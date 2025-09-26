@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Select from 'react-select';
 
 interface ClientSearchFilters {
@@ -7,7 +7,6 @@ interface ClientSearchFilters {
   place: string;
   civil_status: string;
   sort_by: string;
-  sort_order: 'asc' | 'desc';
   per_page: number;
   page: number;
 }
@@ -25,14 +24,30 @@ const ClientSearchFilters: React.FC<ClientSearchFiltersProps> = ({ onSearch, onC
     place: '',
     civil_status: '',
     sort_by: '',
-    sort_order: 'asc',
-    per_page: 15,
+    per_page: 10,
     page: 1
   });
 
   const handleChange = (field: keyof ClientSearchFilters, value: string) => {
-    setFilters(prev => ({ ...prev, [field]: value }));
+    const newFilters = { ...filters, [field]: value };
+    setFilters(newFilters);
+    
+    // Auto-trigger search for important filter changes
+    if (['per_page', 'sex', 'civil_status', 'sort_by'].includes(field)) {
+      onSearch(newFilters);
+    }
   };
+
+  // Debounced search for text inputs
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (filters.search || filters.place) {
+        onSearch(filters);
+      }
+    }, 500); // 500ms delay
+
+    return () => clearTimeout(timeoutId);
+  }, [filters.search, filters.place]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,8 +61,7 @@ const ClientSearchFilters: React.FC<ClientSearchFiltersProps> = ({ onSearch, onC
       place: '',
       civil_status: '',
       sort_by: '',
-      sort_order: 'asc',
-      per_page: 15,
+      per_page: 10,
       page: 1
     });
     onClear();
@@ -191,20 +205,6 @@ const ClientSearchFilters: React.FC<ClientSearchFiltersProps> = ({ onSearch, onC
             />
           </div>
 
-          {/* Sort Order */}
-          <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">
-              Sort Order
-            </label>
-            <select
-              value={filters.sort_order}
-              onChange={(e) => handleChange('sort_order', e.target.value as 'asc' | 'desc')}
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="asc">Ascending</option>
-              <option value="desc">Descending</option>
-            </select>
-          </div>
 
           {/* Per Page */}
           <div>

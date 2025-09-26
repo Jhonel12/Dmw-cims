@@ -1,5 +1,13 @@
 import apiClient from './api-client';
 import type { LoginCredentials, RegisterData, User, AuthResponse } from '../types/auth';
+import type { 
+  ExtendedUser, 
+  UserStats, 
+  CreateUserData, 
+  UpdateUserData, 
+  UpdateProfileData, 
+  ChangePasswordData 
+} from '../types/userManagement';
 import { setAuthToken, setUserData, clearAuthCookies, isAuthenticated, getUserData } from '../utils/cookieUtils';
 
 class UserService {
@@ -131,6 +139,167 @@ class UserService {
       return { isValid: false, message: 'Password must be at least 6 characters long' };
     }
     return { isValid: true };
+  }
+
+  // User Management Methods
+
+  /**
+   * Get all users with pagination and filtering
+   */
+  async getUsers(params?: {
+    page?: number;
+    per_page?: number;
+    role?: string;
+    status?: string;
+    search?: string;
+    sort_by?: string;
+    sort_order?: string;
+  }): Promise<{ success: boolean; data: { data: ExtendedUser[]; total: number; per_page: number; current_page: number; last_page: number } }> {
+    try {
+      const queryParams = new URLSearchParams();
+      if (params?.page) queryParams.append('page', params.page.toString());
+      if (params?.per_page) queryParams.append('per_page', params.per_page.toString());
+      if (params?.role) queryParams.append('role', params.role);
+      if (params?.status) queryParams.append('status', params.status);
+      if (params?.search) queryParams.append('search', params.search);
+      if (params?.sort_by) queryParams.append('sort_by', params.sort_by);
+      if (params?.sort_order) queryParams.append('sort_order', params.sort_order);
+
+      const response = await apiClient.get(`/users?${queryParams.toString()}`) as any;
+      return response;
+    } catch (error) {
+      console.error('Get users error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get user by ID
+   */
+  async getUser(id: number): Promise<{ success: boolean; data: ExtendedUser }> {
+    try {
+      const response = await apiClient.get(`/users/${id}`) as any;
+      return response;
+    } catch (error) {
+      console.error('Get user error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Create new user
+   */
+  async createUser(userData: CreateUserData): Promise<{ success: boolean; data: ExtendedUser }> {
+    try {
+      const response = await apiClient.post('/users', userData) as any;
+      return response;
+    } catch (error) {
+      console.error('Create user error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Update user
+   */
+  async updateUser(id: number, userData: UpdateUserData): Promise<{ success: boolean; data: ExtendedUser }> {
+    try {
+      const response = await apiClient.put(`/users/${id}`, userData) as any;
+      return response;
+    } catch (error) {
+      console.error('Update user error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Delete user
+   */
+  async deleteUser(id: number): Promise<{ success: boolean; message: string }> {
+    try {
+      const response = await apiClient.delete(`/users/${id}`) as any;
+      return response;
+    } catch (error) {
+      console.error('Delete user error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Update current user profile
+   */
+  async updateProfile(profileData: UpdateProfileData): Promise<{ success: boolean; data: ExtendedUser }> {
+    try {
+      const response = await apiClient.put('/users/profile', profileData) as any;
+      
+      // Update stored user data if successful
+      if (response.success && response.data) {
+        setUserData(response.data);
+      }
+      
+      return response;
+    } catch (error) {
+      console.error('Update profile error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Change user password
+   */
+  async changePassword(passwordData: ChangePasswordData): Promise<{ success: boolean; message: string }> {
+    try {
+      const response = await apiClient.put('/users/password', passwordData) as any;
+      return response;
+    } catch (error) {
+      console.error('Change password error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get user statistics
+   */
+  async getUserStats(): Promise<{ success: boolean; data: UserStats }> {
+    try {
+      const response = await apiClient.get('/users/stats') as any;
+      return response;
+    } catch (error) {
+      console.error('Get user stats error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Export users to CSV
+   */
+  async exportUsers(params?: {
+    role?: string;
+    status?: string;
+    search?: string;
+  }): Promise<Blob> {
+    try {
+      const queryParams = new URLSearchParams();
+      if (params?.role) queryParams.append('role', params.role);
+      if (params?.status) queryParams.append('status', params.status);
+      if (params?.search) queryParams.append('search', params.search);
+
+      const response = await fetch(`http://localhost:8000/api/users/export?${queryParams.toString()}`, {
+        headers: {
+          'Authorization': `Bearer ${apiClient.getToken()}`,
+          'Accept': 'text/csv',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to export users');
+      }
+
+      return await response.blob();
+    } catch (error) {
+      console.error('Export users error:', error);
+      throw error;
+    }
   }
 }
 

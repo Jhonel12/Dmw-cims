@@ -1,14 +1,9 @@
 import React, { useState } from 'react';
-import { useToast } from '../../contexts/ToastContext';
-import Calendar from '../forms/Calendar';
+import { useNavigate } from 'react-router-dom';
+import { useToast } from '../contexts/ToastContext';
+import Calendar from '../components/forms/Calendar';
 import Select from 'react-select';
-import { clientService, type ClientFormData as APIClientFormData } from '../../services/clientService';
-
-interface AddClientModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSuccess: () => void;
-}
+import { clientService, type ClientFormData as APIClientFormData } from '../services/clientService';
 
 interface ClientFormData {
   // Basic Information
@@ -189,7 +184,8 @@ const ZIP_CODE_MAPPING: Record<string, string> = {
   'tugaya': '9216'
 };
 
-const AddClientModal: React.FC<AddClientModalProps> = ({ isOpen, onClose, onSuccess }) => {
+const AddClient: React.FC = () => {
+  const navigate = useNavigate();
   const { showSuccess, showError } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   
@@ -834,10 +830,8 @@ const AddClientModal: React.FC<AddClientModalProps> = ({ isOpen, onClose, onSucc
       await clientService.createClient(apiData);
       
       showSuccess('Success!', 'Client profile has been created successfully.');
-      onSuccess();
-      onClose();
       
-      // Reset form
+      // Reset form instead of redirecting
       setFormData({
         firstName: '',
         middleName: '',
@@ -870,6 +864,8 @@ const AddClientModal: React.FC<AddClientModalProps> = ({ isOpen, onClose, onSucc
       setCities([]);
       setBarangays([]);
       setShowBarangayInput(false);
+      setErrors({});
+      
     } catch (error: any) {
       console.error('Error creating client:', error);
       let errorMessage = 'Failed to create client profile. Please try again.';
@@ -889,40 +885,26 @@ const AddClientModal: React.FC<AddClientModalProps> = ({ isOpen, onClose, onSucc
     }
   };
 
-  const handleClose = () => {
-    if (!isLoading) {
-      onClose();
-    }
-  };
-
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      <div className="flex min-h-screen items-center justify-center p-4">
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={handleClose} />
-        
-        <div className="relative w-full max-w-4xl bg-white rounded-xl shadow-2xl">
-          {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-gray-200">
-            <div>
-              <h2 className="text-lg font-bold text-gray-900">Add New Client</h2>
-              <p className="text-sm text-gray-600">Fill in the client's information below</p>
-            </div>
-            <button
-              onClick={handleClose}
-              disabled={isLoading}
-              className="p-2 text-gray-400 hover:text-gray-600 transition-colors duration-200 disabled:opacity-50"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
+    <div className="space-y-4">
+      {/* Page Header */}
+      <div className="card-elevated p-3 sm:p-4">
+        <div className="flex items-center space-x-3">
+          <button
+            onClick={() => navigate('/clients')}
+            className="text-gray-600 hover:text-gray-800 focus:outline-none text-sm"
+          >
+            ← Back to Clients
+          </button>
+        </div>
+        <h1 className="text-base sm:text-lg font-bold text-gray-900 mt-3">Add New Client</h1>
+        <p className="text-xs text-gray-600 mt-1">Fill in the client's information below</p>
+      </div>
 
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="max-h-[70vh] overflow-y-auto">
-            <div className="p-6 space-y-8">
+      {/* Client Form */}
+      <div className="card-elevated">
+        <form onSubmit={handleSubmit} className="max-h-[70vh] overflow-y-auto">
+          <div className="p-6 space-y-8">
               {/* A. CLIENT'S INFORMATION */}
               <div>
                 <h3 className="text-base font-semibold text-gray-900 mb-4 border-b border-gray-200 pb-2">
@@ -1446,7 +1428,7 @@ const AddClientModal: React.FC<AddClientModalProps> = ({ isOpen, onClose, onSucc
             <div className="flex items-center justify-end space-x-3 p-6 border-t border-gray-200 bg-gray-50">
               <button
                 type="button"
-                onClick={handleClose}
+                onClick={() => navigate('/clients')}
                 disabled={isLoading}
                 className="btn btn-secondary"
               >
@@ -1470,8 +1452,8 @@ const AddClientModal: React.FC<AddClientModalProps> = ({ isOpen, onClose, onSucc
           </form>
         </div>
       </div>
-    </div>
+
   );
 };
 
-export default AddClientModal;
+export default AddClient;

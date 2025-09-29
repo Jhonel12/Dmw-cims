@@ -1,13 +1,8 @@
 {
   "rewrites": [
     {
-      "source": "/((?!api/).*)",
+      "source": "/(.*)",
       "destination": "/index.html"
     }
-  ],
-  "functions": {
-    "api/proxy/[...path].js": {
-      "maxDuration": 30
-    }
-  }
+  ]
 }

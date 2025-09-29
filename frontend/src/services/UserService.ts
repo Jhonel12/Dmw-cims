@@ -284,7 +284,7 @@ class UserService {
       if (params?.status) queryParams.append('status', params.status);
       if (params?.search) queryParams.append('search', params.search);
 
-      const response = await fetch(`/api/proxy/users/export?${queryParams.toString()}`, {
+      const response = await fetch(`http://3.95.219.117/api/users/export?${queryParams.toString()}`, {
         headers: {
           'Authorization': `Bearer ${apiClient.getToken()}`,
           'Accept': 'text/csv',

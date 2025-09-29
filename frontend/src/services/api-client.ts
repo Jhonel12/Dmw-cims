@@ -16,6 +16,8 @@ class ApiClient {
         'Accept': 'application/json',
       },
       timeout: 10000, // 10 seconds timeout
+      withCredentials: true, // ✅ ADD THIS - Important for Laravel Sanctum/cookies
+
     });
 
     this.setupInterceptors();
@@ -25,9 +27,7 @@ class ApiClient {
   private setupInterceptors(): void {
     // Request interceptor to add auth token
     this.axiosInstance.interceptors.request.use(
-      (config: any) => {
-        // Always refresh token from storage before making request
-        // This ensures we have the latest token if it was updated elsewhere
+      (config) => { // ✅ Remove 'any' type
         this.refreshTokenFromStorage();
         
         if (this.token) {
@@ -36,18 +36,17 @@ class ApiClient {
         }
         return config;
       },
-      (error: any) => {
+      (error) => { // ✅ Remove 'any' type
         return Promise.reject(error);
       }
     );
 
     // Response interceptor for error handling
     this.axiosInstance.interceptors.response.use(
-      (response: any) => response,
-      async (error: any) => {
+      (response) => response, // ✅ Remove 'any' type
+      async (error) => { // ✅ Remove 'any' type
         if (error.response?.status === 401) {
           console.log('401 Unauthorized - token may be expired');
-          // Token expired or invalid, clear stored data
           this.clearToken();
           clearAuthCookies();
           this.redirectToLogin();

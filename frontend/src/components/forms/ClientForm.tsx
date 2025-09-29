@@ -2,7 +2,6 @@ import React, { useState, useEffect, useImperativeHandle, forwardRef } from 'rea
 import Select from 'react-select';
 import Calendar from './Calendar';
 import { useToast } from '../../contexts/ToastContext';
-import type { Client, ClientFormData as APIClientFormData } from '../../services/clientService';
 
 interface ClientFormData {
   // Basic Information

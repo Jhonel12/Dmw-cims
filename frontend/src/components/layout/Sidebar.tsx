@@ -191,7 +191,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, collapsed, onToggleC
 
         {/* Navigation */}
         <nav className={`space-y-4 ${collapsed ? 'p-3' : 'p-4'}`}>
-          {menuSections.map((section, sectionIndex) => (
+          {menuSections.map((section) => (
             <div key={section.title}>
               {/* Section Header */}
               {!collapsed && (

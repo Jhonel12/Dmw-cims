@@ -56,20 +56,7 @@ interface UpdateUserData {
   language?: string;
 }
 
-interface UpdateProfileData {
-  name: string;
-  email: string;
-  phone?: string;
-  address?: string;
-  timezone?: string;
-  language?: string;
-}
 
-interface ChangePasswordData {
-  current_password: string;
-  password: string;
-  password_confirmation: string;
-}
 
 interface UserSettings {
   name: string;
@@ -166,21 +153,6 @@ const ProfileTab: React.FC<ProfileTabProps> = ({
     }
   }, [activeSection, currentPage, searchTerm, roleFilter, statusFilter]);
 
-  // Handle profile update
-  const handleProfileUpdate = async (profileData: UpdateProfileData) => {
-    try {
-      const response = await userService.updateProfile(profileData);
-      if (response.success) {
-        showSuccess('Profile updated successfully');
-        onSave();
-      } else {
-        showError('Failed to update profile');
-      }
-    } catch (error) {
-      console.error('Error updating profile:', error);
-      showError('Failed to update profile');
-    }
-  };
 
   // Handle user creation
   const handleCreateUser = async (userData: CreateUserData) => {

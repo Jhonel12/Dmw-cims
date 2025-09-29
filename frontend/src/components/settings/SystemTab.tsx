@@ -27,7 +27,6 @@ interface SystemTabProps {
 
 const SystemTab: React.FC<SystemTabProps> = ({
   systemSettings,
-  onSystemSettingsChange,
   onNestedSystemSettingsChange,
   onSave,
   isSaving

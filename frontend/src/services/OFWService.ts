@@ -138,7 +138,7 @@ class OFWService {
       responseType: 'blob'
     });
     
-    return response.data;
+    return response.data as Blob;
   }
 
   /**
@@ -265,21 +265,21 @@ class OFWService {
       
       const response = await apiClient.get(`/ofw/reports?${params.toString()}`);
       
-      console.log('Reports API response:', response.data);
-      console.log('Response status:', response.status);
+      console.log('Reports API response:', (response as any).data);
+      console.log('Response status:', (response as any).status);
       
       // Check if response has success property (new API format)
-      if (response.data.success !== undefined) {
-        if (response.data.success) {
-          return response.data.data;
+      if ((response as any).data.success !== undefined) {
+        if ((response as any).data.success) {
+          return (response as any).data.data;
         } else {
-          throw new Error(response.data.message || 'Failed to fetch reports data');
+          throw new Error((response as any).data.message || 'Failed to fetch reports data');
         }
       } else {
         // Direct data format (fallback for existing API)
-        return response.data;
+        return (response as any).data as OFWStatistics;
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching filtered reports:', error);
       console.error('Error details:', error.response?.data);
       throw error;
@@ -307,17 +307,17 @@ class OFWService {
 
       const response = await apiClient.get(`/ofw/export/excel?${params.toString()}`);
       
-      console.log('CSV export API response:', response.data);
-      console.log('Response data.data:', response.data.data);
+      console.log('CSV export API response:', (response as any).data);
+      console.log('Response data.data:', (response as any).data.data);
       
       // Extract data from response - handle different possible structures
       let exportData = [];
-      if (response.data && response.data.data) {
-        exportData = response.data.data;
-      } else if (response.data && Array.isArray(response.data)) {
-        exportData = response.data;
-      } else if (response.data && response.data.success && response.data.data) {
-        exportData = response.data.data;
+      if ((response as any).data && (response as any).data.data) {
+        exportData = (response as any).data.data;
+      } else if ((response as any).data && Array.isArray((response as any).data)) {
+        exportData = (response as any).data;
+      } else if ((response as any).data && (response as any).data.success && (response as any).data.data) {
+        exportData = (response as any).data.data;
       }
       
       console.log('Extracted CSV export data:', exportData);
@@ -353,17 +353,17 @@ class OFWService {
 
       const response = await apiClient.get(`/ofw/export/pdf?${params.toString()}`);
       
-      console.log('PDF export API response:', response.data);
-      console.log('Response data.data:', response.data.data);
+      console.log('PDF export API response:', (response as any).data);
+      console.log('Response data.data:', (response as any).data.data);
       
       // Extract data from response - handle different possible structures
       let exportData = [];
-      if (response.data && response.data.data) {
-        exportData = response.data.data;
-      } else if (response.data && Array.isArray(response.data)) {
-        exportData = response.data;
-      } else if (response.data && response.data.success && response.data.data) {
-        exportData = response.data.data;
+      if ((response as any).data && (response as any).data.data) {
+        exportData = (response as any).data.data;
+      } else if ((response as any).data && Array.isArray((response as any).data)) {
+        exportData = (response as any).data;
+      } else if ((response as any).data && (response as any).data.success && (response as any).data.data) {
+        exportData = (response as any).data.data;
       }
       
       console.log('Extracted export data:', exportData);

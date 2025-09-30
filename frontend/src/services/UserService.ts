@@ -19,7 +19,7 @@ class UserService {
   private async getCsrfToken(): Promise<void> {
     try {
       // Use the axios instance directly to call sanctum endpoint
-      await apiClient.getAxiosInstance().get('https://goalhub.site/sanctum/csrf-cookie');
+      await apiClient.getAxiosInstance().get('/sanctum/csrf-cookie');
     } catch (error) {
       console.error('Failed to get CSRF token:', error);
       throw error;
@@ -301,7 +301,7 @@ class UserService {
       if (params?.status) queryParams.append('status', params.status);
       if (params?.search) queryParams.append('search', params.search);
 
-      const response = await fetch(`https://goalhub.site/api/users/export?${queryParams.toString()}`, {
+      const response = await fetch(`${apiClient.getAxiosInstance().defaults.baseURL}/users/export?${queryParams.toString()}`, {
         headers: {
           'Authorization': `Bearer ${apiClient.getToken()}`,
           'Accept': 'text/csv',

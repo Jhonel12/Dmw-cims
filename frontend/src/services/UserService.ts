@@ -18,8 +18,8 @@ class UserService {
   // Private method to get CSRF token
   private async getCsrfToken(): Promise<void> {
     try {
-      // Use the axios instance directly to call sanctum endpoint
-      await apiClient.getAxiosInstance().get('/sanctum/csrf-cookie');
+      // FIXED: Changed from /sanctum/csrf-cookie to /api/csrf-cookie
+      await apiClient.getAxiosInstance().get('/api/csrf-cookie');
     } catch (error) {
       console.error('Failed to get CSRF token:', error);
       throw error;

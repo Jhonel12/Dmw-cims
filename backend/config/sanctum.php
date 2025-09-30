@@ -81,4 +81,16 @@ return [
         'validate_csrf_token' => Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class,
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Route Prefix
+    |--------------------------------------------------------------------------
+    |
+    | This value controls the prefix that will be used for Sanctum routes.
+    | This should match your API route prefix to avoid 404 errors.
+    |
+    */
+
+    'prefix' => 'api',
+
 ];

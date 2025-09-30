@@ -2,7 +2,8 @@ import axios from 'axios';
 import { getAuthToken, clearAuthCookies } from '../utils/cookieUtils';
 
 // API Base URL - adjust this to match your backend URL
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://3.95.219.117/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://goalhub.site/api';
+
 
 class ApiClient {
   private axiosInstance: ReturnType<typeof axios.create>;

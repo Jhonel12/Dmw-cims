@@ -15,10 +15,24 @@ class UserService {
     // No need for constructor setup - apiClient handles everything
   }
 
+  // Private method to get CSRF token
+  private async getCsrfToken(): Promise<void> {
+    try {
+      // Use the axios instance directly to call sanctum endpoint
+      await apiClient.getAxiosInstance().get('https://goalhub.site/sanctum/csrf-cookie');
+    } catch (error) {
+      console.error('Failed to get CSRF token:', error);
+      throw error;
+    }
+  }
+
   // Login user
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
     try {
-      const data = await apiClient.post<AuthResponse>('/auth/login', credentials);
+      // Get CSRF token first
+      await this.getCsrfToken();
+      
+      const data = await apiClient.post<AuthResponse>('/api/auth/login', credentials);
 
       if (data.success && data.data) {
         // Store token and user data in cookies
@@ -37,7 +51,10 @@ class UserService {
   // Register user
   async register(userData: RegisterData): Promise<AuthResponse> {
     try {
-      const data = await apiClient.post<AuthResponse>('/auth/register', userData);
+      // Get CSRF token first
+      await this.getCsrfToken();
+      
+      const data = await apiClient.post<AuthResponse>('/api/auth/register', userData);
 
       if (data.success && data.data) {
         // Store token and user data in cookies
@@ -79,7 +96,7 @@ class UserService {
   // Get current user
   async getCurrentUser(): Promise<{ success: boolean; data: { user: User; token?: string; token_type?: string } }> {
     try {
-      const data = await apiClient.get<{ success: boolean; data: { user: User; token?: string; token_type?: string } }>('/auth/me');
+      const data = await apiClient.get<{ success: boolean; data: { user: User; token?: string; token_type?: string } }>('/api/auth/me');
       
       // If token is returned, update stored token and API client
       if (data.success && data.data && data.data.token) {
@@ -97,7 +114,7 @@ class UserService {
   // Refresh token
   async refreshToken(): Promise<{ success: boolean; data: { token: string; token_type: string } }> {
     try {
-      const data = await apiClient.post<{ success: boolean; data: { token: string; token_type: string } }>('/auth/refresh');
+      const data = await apiClient.post<{ success: boolean; data: { token: string; token_type: string } }>('/api/auth/refresh');
 
       if (data.success && data.data) {
         // Update token
@@ -165,7 +182,7 @@ class UserService {
       if (params?.sort_by) queryParams.append('sort_by', params.sort_by);
       if (params?.sort_order) queryParams.append('sort_order', params.sort_order);
 
-      const response = await apiClient.get(`/users?${queryParams.toString()}`) as any;
+      const response = await apiClient.get(`/api/users?${queryParams.toString()}`) as any;
       return response;
     } catch (error) {
       console.error('Get users error:', error);
@@ -178,7 +195,7 @@ class UserService {
    */
   async getUser(id: number): Promise<{ success: boolean; data: ExtendedUser }> {
     try {
-      const response = await apiClient.get(`/users/${id}`) as any;
+      const response = await apiClient.get(`/api/users/${id}`) as any;
       return response;
     } catch (error) {
       console.error('Get user error:', error);
@@ -191,7 +208,7 @@ class UserService {
    */
   async createUser(userData: CreateUserData): Promise<{ success: boolean; data: ExtendedUser }> {
     try {
-      const response = await apiClient.post('/users', userData) as any;
+      const response = await apiClient.post('/api/users', userData) as any;
       return response;
     } catch (error) {
       console.error('Create user error:', error);
@@ -204,7 +221,7 @@ class UserService {
    */
   async updateUser(id: number, userData: UpdateUserData): Promise<{ success: boolean; data: ExtendedUser }> {
     try {
-      const response = await apiClient.put(`/users/${id}`, userData) as any;
+      const response = await apiClient.put(`/api/users/${id}`, userData) as any;
       return response;
     } catch (error) {
       console.error('Update user error:', error);
@@ -217,7 +234,7 @@ class UserService {
    */
   async deleteUser(id: number): Promise<{ success: boolean; message: string }> {
     try {
-      const response = await apiClient.delete(`/users/${id}`) as any;
+      const response = await apiClient.delete(`/api/users/${id}`) as any;
       return response;
     } catch (error) {
       console.error('Delete user error:', error);
@@ -230,7 +247,7 @@ class UserService {
    */
   async updateProfile(profileData: UpdateProfileData): Promise<{ success: boolean; data: ExtendedUser }> {
     try {
-      const response = await apiClient.put('/users/profile', profileData) as any;
+      const response = await apiClient.put('/api/users/profile', profileData) as any;
       
       // Update stored user data if successful
       if (response.success && response.data) {
@@ -249,7 +266,7 @@ class UserService {
    */
   async changePassword(passwordData: ChangePasswordData): Promise<{ success: boolean; message: string }> {
     try {
-      const response = await apiClient.put('/users/password', passwordData) as any;
+      const response = await apiClient.put('/api/users/password', passwordData) as any;
       return response;
     } catch (error) {
       console.error('Change password error:', error);
@@ -262,7 +279,7 @@ class UserService {
    */
   async getUserStats(): Promise<{ success: boolean; data: UserStats }> {
     try {
-      const response = await apiClient.get('/users/stats') as any;
+      const response = await apiClient.get('/api/users/stats') as any;
       return response;
     } catch (error) {
       console.error('Get user stats error:', error);

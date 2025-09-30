@@ -15,23 +15,10 @@ class UserService {
     // No need for constructor setup - apiClient handles everything
   }
 
-  // Private method to get CSRF token
-  private async getCsrfToken(): Promise<void> {
-    try {
-      // FIXED: Changed from /sanctum/csrf-cookie to /api/csrf-cookie
-      await apiClient.getAxiosInstance().get('/api/csrf-cookie');
-    } catch (error) {
-      console.error('Failed to get CSRF token:', error);
-      throw error;
-    }
-  }
-
   // Login user
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
     try {
-      // Get CSRF token first
-      await this.getCsrfToken();
-      
+      // No CSRF token needed for token-based authentication
       const data = await apiClient.post<AuthResponse>('/auth/login', credentials);
 
       if (data.success && data.data) {
@@ -51,9 +38,7 @@ class UserService {
   // Register user
   async register(userData: RegisterData): Promise<AuthResponse> {
     try {
-      // Get CSRF token first
-      await this.getCsrfToken();
-      
+      // No CSRF token needed for token-based authentication
       const data = await apiClient.post<AuthResponse>('/auth/register', userData);
 
       if (data.success && data.data) {

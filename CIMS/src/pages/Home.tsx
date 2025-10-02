@@ -6,15 +6,19 @@ import bgImage from "../assets/dmw2.jpg";
 import logo from "../assets/dmwlogo2.svg";
 import smallLogo from "../assets/registration.png";
 import bagongLogo from "../assets/bagong.png";
+import { SurveyModal } from "./modals/surveyModal";
+import { ToastContainer, useToast } from "../toaster/customtoast";
 
 type ClientInfoModalProps = {
   isModalOpen: boolean;
   setIsModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  onSuccess: () => void;
 };
 
 export function ClientInfoModal({
   isModalOpen,
   setIsModalOpen,
+  onSuccess,
 }: ClientInfoModalProps) {
   // ✅ Typed Form Data
   interface FormData {
@@ -44,7 +48,7 @@ export function ClientInfoModal({
     nationalIdNo: string;
   }
 
-  const [formData, setFormData] = useState<FormData>({
+  const initialFormData: FormData = {
     firstName: "",
     middleName: "",
     lastName: "",
@@ -69,7 +73,9 @@ export function ClientInfoModal({
     socialOther: "",
     hasNationalId: "",
     nationalIdNo: "",
-  });
+  };
+
+  const [formData, setFormData] = useState<FormData>(initialFormData);
 
   // ✅ Track touched fields (for validation)
   const [touched, setTouched] = useState<Record<string, boolean>>({});
@@ -77,14 +83,24 @@ export function ClientInfoModal({
   // ✅ Utility: Input validation class
   const getInputClass = (field: string) => {
     if (!touched[field]) return "border-gray-300";
-    return formData[field as keyof FormData]
+    const value = formData[field as keyof FormData];
+    const hasError = validateForm()[field];
+    return hasError
+      ? "border-red-500 focus:ring-red-500"
+      : value
       ? "border-green-500 focus:ring-green-500"
-      : "border-red-500 focus:ring-red-500";
+      : "border-gray-300";
+  };
+
+  // ✅ Utility: Get error message
+  const getErrorMessage = (field: string) => {
+    if (!touched[field]) return null;
+    return validateForm()[field] || null;
   };
 
   // ✅ Handle input changes
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type, checked } = e.target;
+    const { name, value, type } = e.target;
 
     if (type === "checkbox") {
       setFormData((prev) => {
@@ -114,9 +130,69 @@ export function ClientInfoModal({
     setTouched({ ...touched, [e.target.name]: true });
   };
 
+  // Validation function
+  const validateForm = () => {
+    const errors: Record<string, string> = {};
+    
+    // Required fields validation
+    if (!formData.firstName.trim()) errors.firstName = "First name is required";
+    if (!formData.lastName.trim()) errors.lastName = "Last name is required";
+    if (!formData.dob) errors.dob = "Date of birth is required";
+    if (!formData.civil) errors.civil = "Civil status is required";
+    if (!formData.sex) errors.sex = "Sex is required";
+    if (!formData.tel.trim()) errors.tel = "Telephone/Mobile is required";
+    if (!formData.email.trim()) errors.email = "Email is required";
+    if (!formData.houseNo.trim()) errors.houseNo = "House number is required";
+    if (!formData.street.trim()) errors.street = "Street is required";
+    if (!formData.barangay.trim()) errors.barangay = "Barangay is required";
+    if (!formData.city.trim()) errors.city = "City is required";
+    if (!formData.province.trim()) errors.province = "Province is required";
+    if (!formData.region.trim()) errors.region = "Region is required";
+    if (!formData.zip.trim()) errors.zip = "Zip code is required";
+    if (!formData.emergencyName.trim()) errors.emergencyName = "Emergency contact name is required";
+    if (!formData.emergencyTel.trim()) errors.emergencyTel = "Emergency contact number is required";
+    if (!formData.emergencyRelation.trim()) errors.emergencyRelation = "Emergency contact relation is required";
+    if (!formData.hasNationalId) errors.hasNationalId = "Please specify if you have a National ID";
+    
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (formData.email && !emailRegex.test(formData.email)) {
+      errors.email = "Please enter a valid email address";
+    }
+    
+    // National ID validation
+    if (formData.hasNationalId === "Yes" && !formData.nationalIdNo.trim()) {
+      errors.nationalIdNo = "National ID number is required when you have a National ID";
+    }
+    
+    return errors;
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate form
+    const errors = validateForm();
+    
+    if (Object.keys(errors).length > 0) {
+      // Mark all fields as touched to show validation errors
+      const touchedFields: Record<string, boolean> = {};
+      Object.keys(errors).forEach(field => {
+        touchedFields[field] = true;
+      });
+      setTouched(touchedFields);
+      return;
+    }
+    
     console.log("Form Submitted:", formData);
+    
+    // Clear form data
+    setFormData(initialFormData);
+    setTouched({});
+    
+    // Close modal and trigger success toast
+    setIsModalOpen(false);
+    onSuccess();
   };
 
   if (!isModalOpen) return null;
@@ -191,6 +267,7 @@ export function ClientInfoModal({
                           field as keyof FormData
                         )}`}
                         placeholder=" "
+                        required={["firstName", "lastName"].includes(field)}
                       />
                       <label
                         className="absolute left-3 top-2 text-gray-500 text-sm transition-all
@@ -202,7 +279,11 @@ export function ClientInfoModal({
                             i
                           ]
                         }
+                        {["firstName", "lastName"].includes(field) && <span className="text-red-500 ml-1">*</span>}
                       </label>
+                      {getErrorMessage(field) && (
+                        <p className="text-red-500 text-xs mt-1">{getErrorMessage(field)}</p>
+                      )}
                     </div>
                   )
                 )}
@@ -217,14 +298,18 @@ export function ClientInfoModal({
                     value={formData.dob}
                     onChange={handleChange}
                     onBlur={handleBlur}
-                    className={`peer w-full border rounded-lg px-3 pt-5 pb-2 ${getInputClass(
+                    className={`peer w-full border rounded-lg px-3 pt-5 pb-2 focus:outline-none focus:ring-2 ${getInputClass(
                       "dob"
                     )}`}
                     placeholder=" "
+                    required
                   />
                   <label className="absolute left-3 top-2 text-gray-500 text-sm transition-all peer-placeholder-shown:top-5 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-focus:top-2 peer-focus:text-sm peer-focus:text-blue-600">
-                    Date of Birth
+                    Date of Birth <span className="text-red-500 ml-1">*</span>
                   </label>
+                  {getErrorMessage("dob") && (
+                    <p className="text-red-500 text-xs mt-1">{getErrorMessage("dob")}</p>
+                  )}
                 </div>
                 <div className="relative">
                   <input
@@ -232,22 +317,20 @@ export function ClientInfoModal({
                     name="age"
                     value={formData.age}
                     readOnly
-                    className={`peer w-full border rounded-lg px-3 pt-5 pb-2 ${getInputClass(
-                      "age"
-                    )}`}
+                    className="peer w-full border rounded-lg px-3 pt-5 pb-2 bg-gray-100"
                     placeholder=" "
                   />
                   <label className="absolute left-3 top-2 text-gray-500 text-sm transition-all peer-placeholder-shown:top-5 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-focus:top-2 peer-focus:text-sm peer-focus:text-blue-600">
-                    Age
+                    Age (Auto-calculated)
                   </label>
                 </div>
               </div>
 
               {/* Civil Status & Sex */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="border p-3 rounded">
+                <div className={`border p-3 rounded ${getInputClass("civil").includes("red") ? "border-red-500" : ""}`}>
                   <label className="block font-semibold text-sm mb-2">
-                    Civil Status
+                    Civil Status <span className="text-red-500 ml-1">*</span>
                   </label>
                   <div className="flex flex-wrap gap-3 text-sm">
                     {["Single", "Married", "Legally Separated", "Widowed"].map(
@@ -259,16 +342,20 @@ export function ClientInfoModal({
                             value={status}
                             checked={formData.civil === status}
                             onChange={handleChange}
+                            required
                           />{" "}
                           {status}
                         </label>
                       )
                     )}
                   </div>
+                  {getErrorMessage("civil") && (
+                    <p className="text-red-500 text-xs mt-2">{getErrorMessage("civil")}</p>
+                  )}
                 </div>
-                <div className="border p-3 rounded">
+                <div className={`border p-3 rounded ${getInputClass("sex").includes("red") ? "border-red-500" : ""}`}>
                   <label className="block font-semibold text-sm mb-2">
-                    Sex
+                    Sex <span className="text-red-500 ml-1">*</span>
                   </label>
                   <div className="flex gap-6 text-sm">
                     {["Male", "Female"].map((sex) => (
@@ -279,11 +366,15 @@ export function ClientInfoModal({
                           value={sex}
                           checked={formData.sex === sex}
                           onChange={handleChange}
+                          required
                         />{" "}
                         {sex}
                       </label>
                     ))}
                   </div>
+                  {getErrorMessage("sex") && (
+                    <p className="text-red-500 text-xs mt-2">{getErrorMessage("sex")}</p>
+                  )}
                 </div>
               </div>
 
@@ -340,14 +431,18 @@ export function ClientInfoModal({
                       value={formData[field as keyof FormData]}
                       onChange={handleChange}
                       onBlur={handleBlur}
-                      className={`peer w-full border rounded-lg px-3 pt-5 pb-2 ${getInputClass(
+                      className={`peer w-full border rounded-lg px-3 pt-5 pb-2 focus:outline-none focus:ring-2 ${getInputClass(
                         field as keyof FormData
                       )}`}
                       placeholder=" "
+                      required
                     />
                     <label className="absolute left-3 top-2 text-gray-500 text-sm transition-all peer-placeholder-shown:top-5 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-focus:top-2 peer-focus:text-sm peer-focus:text-blue-600">
-                      {["Telephone / Mobile", "Email"][i]}
+                      {["Telephone / Mobile", "Email"][i]} <span className="text-red-500 ml-1">*</span>
                     </label>
+                    {getErrorMessage(field) && (
+                      <p className="text-red-500 text-xs mt-1">{getErrorMessage(field)}</p>
+                    )}
                   </div>
                 ))}
               </div>
@@ -365,14 +460,18 @@ export function ClientInfoModal({
                         value={formData[field as keyof FormData]}
                         onChange={handleChange}
                         onBlur={handleBlur}
-                        className={`peer w-full border rounded-lg px-3 pt-5 pb-2 ${getInputClass(
+                        className={`peer w-full border rounded-lg px-3 pt-5 pb-2 focus:outline-none focus:ring-2 ${getInputClass(
                           field as keyof FormData
                         )}`}
                         placeholder=" "
+                        required
                       />
                       <label className="absolute left-3 top-2 text-gray-500 text-sm transition-all peer-placeholder-shown:top-5 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-focus:top-2 peer-focus:text-sm peer-focus:text-blue-600">
-                        {["House No.", "Street", "Barangay", "City"][i]}
+                        {["House No.", "Street", "Barangay", "City"][i]} <span className="text-red-500 ml-1">*</span>
                       </label>
+                      {getErrorMessage(field) && (
+                        <p className="text-red-500 text-xs mt-1">{getErrorMessage(field)}</p>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -386,14 +485,18 @@ export function ClientInfoModal({
                         value={formData[field as keyof FormData]}
                         onChange={handleChange}
                         onBlur={handleBlur}
-                        className={`peer w-full border rounded-lg px-3 pt-5 pb-2 ${getInputClass(
+                        className={`peer w-full border rounded-lg px-3 pt-5 pb-2 focus:outline-none focus:ring-2 ${getInputClass(
                           field as keyof FormData
                         )}`}
                         placeholder=" "
+                        required
                       />
                       <label className="absolute left-3 top-2 text-gray-500 text-sm transition-all peer-placeholder-shown:top-5 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-focus:top-2 peer-focus:text-sm peer-focus:text-blue-600">
-                        {["Province", "Region", "Zip Code"][i]}
+                        {["Province", "Region", "Zip Code"][i]} <span className="text-red-500 ml-1">*</span>
                       </label>
+                      {getErrorMessage(field) && (
+                        <p className="text-red-500 text-xs mt-1">{getErrorMessage(field)}</p>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -415,10 +518,11 @@ export function ClientInfoModal({
                           value={formData[field as keyof FormData]}
                           onChange={handleChange}
                           onBlur={handleBlur}
-                          className={`peer w-full border rounded-lg px-3 pt-5 pb-2 ${getInputClass(
+                          className={`peer w-full border rounded-lg px-3 pt-5 pb-2 focus:outline-none focus:ring-2 ${getInputClass(
                             field as keyof FormData
                           )}`}
                           placeholder=" "
+                          required
                         />
                         <label className="absolute left-3 top-2 text-gray-500 text-sm transition-all peer-placeholder-shown:top-5 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-focus:top-2 peer-focus:text-sm peer-focus:text-blue-600">
                           {
@@ -427,8 +531,11 @@ export function ClientInfoModal({
                               "Telephone/Mobile No.",
                               "Nature of Relation",
                             ][i]
-                          }
+                          } <span className="text-red-500 ml-1">*</span>
                         </label>
+                        {getErrorMessage(field) && (
+                          <p className="text-red-500 text-xs mt-1">{getErrorMessage(field)}</p>
+                        )}
                       </div>
                     )
                   )}
@@ -436,9 +543,9 @@ export function ClientInfoModal({
               </div>
 
               {/* National ID */}
-              <div className="border p-3 rounded">
+              <div className={`border p-3 rounded ${getInputClass("hasNationalId").includes("red") ? "border-red-500" : ""}`}>
                 <label className="block font-semibold text-sm mb-2">
-                  Do you have a National ID?
+                  Do you have a National ID? <span className="text-red-500 ml-1">*</span>
                 </label>
                 <div className="flex gap-6 text-sm">
                   {["Yes", "No"].map((option) => (
@@ -449,11 +556,15 @@ export function ClientInfoModal({
                         value={option}
                         checked={formData.hasNationalId === option}
                         onChange={handleChange}
+                        required
                       />{" "}
                       {option}
                     </label>
                   ))}
                 </div>
+                {getErrorMessage("hasNationalId") && (
+                  <p className="text-red-500 text-xs mt-2">{getErrorMessage("hasNationalId")}</p>
+                )}
                 {formData.hasNationalId === "Yes" && (
                   <div className="relative mt-3">
                     <input
@@ -461,12 +572,17 @@ export function ClientInfoModal({
                       name="nationalIdNo"
                       value={formData.nationalIdNo}
                       onChange={handleChange}
-                      className="peer w-full border rounded-lg px-3 pt-5 pb-2"
+                      onBlur={handleBlur}
+                      className={`peer w-full border rounded-lg px-3 pt-5 pb-2 focus:outline-none focus:ring-2 ${getInputClass("nationalIdNo")}`}
                       placeholder=" "
+                      required
                     />
                     <label className="absolute left-3 top-2 text-gray-500 text-sm transition-all peer-placeholder-shown:top-5 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-focus:top-2 peer-focus:text-sm peer-focus:text-blue-600">
-                      National ID No.
+                      National ID No. <span className="text-red-500 ml-1">*</span>
                     </label>
+                    {getErrorMessage("nationalIdNo") && (
+                      <p className="text-red-500 text-xs mt-1">{getErrorMessage("nationalIdNo")}</p>
+                    )}
                   </div>
                 )}
               </div>
@@ -498,6 +614,34 @@ export function ClientInfoModal({
 // ✅ Default export Home
 export default function Home() {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSurveyModalOpen, setIsSurveyModalOpen] = useState(false);
+  const [surveyClientType, setSurveyClientType] = useState<"walk-in" | "online">("walk-in");
+  
+  // Toast functionality
+  const { toasts, success, removeToast } = useToast();
+
+  const handleSurveyClick = (clientType: "walk-in" | "online") => {
+    setSurveyClientType(clientType);
+    setIsSurveyModalOpen(true);
+  };
+
+  const handleFormSuccess = () => {
+    success({
+      title: "Registration Successful!",
+      message: "Your client information has been submitted successfully.",
+      duration: 5000
+    });
+  };
+
+  const handleSurveySuccess = (controlNo?: string) => {
+    success({
+      title: "Survey Submitted Successfully!",
+      message: controlNo 
+        ? `Thank you for your valuable feedback. Your response has been recorded with control number: ${controlNo}`
+        : "Thank you for your valuable feedback. Your response has been recorded.",
+      duration: 5000
+    });
+  };
 
   return (
     <div className="min-h-screen flex flex-col relative">
@@ -537,10 +681,16 @@ export default function Home() {
                 </h2>
 
                 <div className="mt-6 flex flex-col sm:flex-row gap-4 justify-center">
-                  <button className="px-6 py-3 bg-blue-500 text-white font-bold rounded-lg shadow hover:bg-blue-600 transition w-44">
+                  <button 
+                    onClick={() => handleSurveyClick("walk-in")}
+                    className="px-6 py-3 bg-blue-500 text-white font-bold rounded-lg shadow hover:bg-blue-600 transition w-44"
+                  >
                     Walk-in Client
                   </button>
-                  <button className="px-6 py-3 bg-blue-500 text-white font-bold rounded-lg shadow hover:bg-blue-600 transition w-44">
+                  <button 
+                    onClick={() => handleSurveyClick("online")}
+                    className="px-6 py-3 bg-blue-500 text-white font-bold rounded-lg shadow hover:bg-blue-600 transition w-44"
+                  >
                     Online Client
                   </button>
                 </div>
@@ -692,11 +842,21 @@ export default function Home() {
 
       <Footer />
 
-      {/* ✅ Mount Modal */}
+      {/* ✅ Mount Modals */}
       <ClientInfoModal
         isModalOpen={isModalOpen}
         setIsModalOpen={setIsModalOpen}
+        onSuccess={handleFormSuccess}
       />
+      <SurveyModal
+        isModalOpen={isSurveyModalOpen}
+        setIsModalOpen={setIsSurveyModalOpen}
+        clientType={surveyClientType}
+        onSuccess={handleSurveySuccess}
+      />
+      
+      {/* Toast Container */}
+      <ToastContainer toasts={toasts} onClose={removeToast} />
     </div>
   );
 }

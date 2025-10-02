@@ -2,7 +2,7 @@ import axios from 'axios';
 import { getAuthToken, clearAuthCookies } from '../utils/cookieUtils';
 
 // API Base URL - adjust this to match your backend URL
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://goalhub.site/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 
 
 
@@ -133,9 +133,12 @@ class ApiClient {
   // Generic GET request
   async get<T>(url: string, config?: any): Promise<T> {
     try {
+      console.log('API Client GET:', url);
+      console.log('Current token:', this.token ? 'exists' : 'missing');
       const response = await this.axiosInstance.get<T>(url, config);
       return response.data;
     } catch (error) {
+      console.error('API Client GET error:', error);
       this.handleError(error);
     }
   }

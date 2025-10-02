@@ -286,18 +286,14 @@ class UserService {
       if (params?.status) queryParams.append('status', params.status);
       if (params?.search) queryParams.append('search', params.search);
 
-      const response = await fetch(`${apiClient.getAxiosInstance().defaults.baseURL}/users/export?${queryParams.toString()}`, {
+      const response = await apiClient.getAxiosInstance().get(`/users/export?${queryParams.toString()}`, {
+        responseType: 'blob',
         headers: {
-          'Authorization': `Bearer ${apiClient.getToken()}`,
           'Accept': 'text/csv',
         },
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to export users');
-      }
-
-      return await response.blob();
+      return response.data as Blob;
     } catch (error) {
       console.error('Export users error:', error);
       throw error;

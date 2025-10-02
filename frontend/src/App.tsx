@@ -7,6 +7,9 @@ import Reports from './pages/Reports';
 import ClientProfile from './pages/ClientProfile';
 import AddClient from './pages/AddClient';
 import ClientReports from './pages/ClientReports';
+import SurveyList from './pages/SurveyList';
+import SurveyAnalytics from './pages/SurveyAnalytics';
+import SurveyReports from './pages/SurveyReports';
 import Settings from './pages/Settings';
 import Login from './pages/auth/Login';
 import ProtectedRoute from './components/auth/ProtectedRoute';
@@ -72,6 +75,27 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <ClientReports />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/survey-list" element={
+              <ProtectedRoute>
+                <Layout>
+                  <SurveyList />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/survey-analytics" element={
+              <ProtectedRoute>
+                <Layout>
+                  <SurveyAnalytics />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/survey-reports" element={
+              <ProtectedRoute>
+                <Layout>
+                  <SurveyReports />
                 </Layout>
               </ProtectedRoute>
             } />

@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ClientController;
 use App\Http\Controllers\Api\OFWController;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\CustomerFeedbackController;
 
 /*
 |--------------------------------------------------------------------------
@@ -73,6 +74,16 @@ Route::middleware('auth:sanctum')->prefix('users')->group(function () {
     Route::delete('/{id}', [UserController::class, 'deleteUser']);         // DELETE /api/users/{id}
     Route::put('/profile', [UserController::class, 'updateProfile']);      // PUT /api/users/profile
     Route::put('/password', [UserController::class, 'changePassword']);    // PUT /api/users/password
+});
+
+// Customer feedback routes
+Route::post('/customer-feedback', [CustomerFeedbackController::class, 'store']); // Public - for form submission
+
+// Protected customer feedback routes (admin only)
+Route::middleware('auth:sanctum')->prefix('customer-feedback')->group(function () {
+    Route::get('/', [CustomerFeedbackController::class, 'index']);
+    Route::get('/list', [CustomerFeedbackController::class, 'getSurveyList']);
+    Route::get('/statistics', [CustomerFeedbackController::class, 'statistics']);
 });
 
 // Test route to verify API is working

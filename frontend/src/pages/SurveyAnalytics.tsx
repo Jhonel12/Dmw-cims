@@ -1,8 +1,35 @@
 import React, { useState, useEffect } from 'react';
 import { useToast } from '../contexts/ToastContext';
+import { surveyAnalyticsService } from '../services/surveyAnalyticsService';
+
+// Local interface definition to avoid import issues
+interface SurveyAnalyticsType {
+  totalResponses: number;
+  averageSatisfaction: number;
+  maleCount: number;
+  femaleCount: number;
+  walkInCount: number;
+  onlineCount: number;
+  satisfactionBreakdown: {
+    excellent: number;
+    good: number;
+    fair: number;
+    poor: number;
+    veryPoor: number;
+  };
+  genderBreakdown?: {
+    male: number;
+    female: number;
+  };
+  channelBreakdown?: {
+    walk_in: number;
+    online: number;
+  };
+  lastUpdated?: string;
+}
 
 const SurveyAnalytics: React.FC = () => {
-  const [analytics, setAnalytics] = useState({
+  const [analytics, setAnalytics] = useState<SurveyAnalyticsType>({
     totalResponses: 0,
     averageSatisfaction: 0,
     maleCount: 0,
@@ -24,27 +51,14 @@ const SurveyAnalytics: React.FC = () => {
     const fetchAnalytics = async () => {
       try {
         setIsLoading(true);
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        // Mock analytics data
-        setAnalytics({
-          totalResponses: 156,
-          averageSatisfaction: 4.2,
-          maleCount: 89,
-          femaleCount: 67,
-          walkInCount: 98,
-          onlineCount: 58,
-          satisfactionBreakdown: {
-            excellent: 45,
-            good: 67,
-            fair: 32,
-            poor: 10,
-            veryPoor: 2
-          }
-        });
+        const data = await surveyAnalyticsService.getAnalytics();
+        setAnalytics(data);
       } catch (error) {
-        showToast('Failed to load analytics data', 'error');
+        showToast({
+          type: 'error',
+          title: 'Error',
+          message: 'Failed to load analytics data'
+        });
         console.error('Error fetching analytics:', error);
       } finally {
         setIsLoading(false);
@@ -52,7 +66,67 @@ const SurveyAnalytics: React.FC = () => {
     };
 
     fetchAnalytics();
-  }, [showToast]);
+  }, []); // Empty dependency array - only run on mount
+
+  const handleRefresh = async () => {
+    console.log('Refresh button clicked');
+    showToast({
+      type: 'info',
+      title: 'Refreshing',
+      message: 'Analytics data is being refreshed...'
+    });
+    
+    try {
+      setIsLoading(true);
+      console.log('Refreshing analytics data...');
+      const data = await surveyAnalyticsService.getAnalytics();
+      console.log('Analytics data received:', data);
+      setAnalytics(data);
+      showToast({
+        type: 'success',
+        title: 'Success',
+        message: 'Analytics data refreshed successfully!'
+      });
+    } catch (error) {
+      console.error('Error refreshing analytics:', error);
+      showToast({
+        type: 'error',
+        title: 'Error',
+        message: 'Failed to refresh analytics data. Please try again.'
+      });
+    } finally {
+      setIsLoading(false);
+      console.log('Refresh completed');
+    }
+  };
+
+  const handleExportReport = async () => {
+    try {
+      const exportData = await surveyAnalyticsService.exportAnalytics({
+        type: 'summary',
+        format: 'csv'
+      });
+      
+      if (exportData.csv_data) {
+        await surveyAnalyticsService.downloadCSV(
+          [exportData.csv_data], 
+          exportData.filename
+        );
+        showToast({
+          type: 'success',
+          title: 'Success',
+          message: 'Report exported successfully'
+        });
+      }
+    } catch (error) {
+      showToast({
+        type: 'error',
+        title: 'Error',
+        message: 'Failed to export report'
+      });
+      console.error('Error exporting report:', error);
+    }
+  };
 
   const StatCard = ({ title, value, icon, color = 'blue' }: {
     title: string;
@@ -110,11 +184,25 @@ const SurveyAnalytics: React.FC = () => {
           </p>
         </div>
         <div className="flex items-center space-x-3">
-          <button className="btn btn-ghost text-sm">
+          <button 
+            onClick={handleExportReport}
+            disabled={isLoading}
+            className="btn btn-ghost text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+          >
             <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
             </svg>
             Export Report
+          </button>
+          <button 
+            onClick={handleRefresh}
+            disabled={isLoading}
+            className="btn btn-primary text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <svg className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            Refresh
           </button>
         </div>
       </div>

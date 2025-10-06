@@ -10,6 +10,7 @@ import ClientReports from './pages/ClientReports';
 import SurveyList from './pages/SurveyList';
 import SurveyAnalytics from './pages/SurveyAnalytics';
 import SurveyReports from './pages/SurveyReports';
+import ClientSuggestions from './pages/clientsuggestions';
 import Settings from './pages/Settings';
 import Login from './pages/auth/Login';
 import ProtectedRoute from './components/auth/ProtectedRoute';
@@ -96,6 +97,13 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <SurveyReports />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/client-suggestions" element={
+              <ProtectedRoute>
+                <Layout>
+                  <ClientSuggestions />
                 </Layout>
               </ProtectedRoute>
             } />

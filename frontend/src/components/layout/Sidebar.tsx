@@ -154,6 +154,16 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, collapsed, onToggleC
             </svg>
           ),
           description: 'Generate Survey Reports'
+        },
+        { 
+          path: '/client-suggestions', 
+          label: 'Client Suggestions', 
+          icon: (
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
+          ),
+          description: 'View Client Suggestions'
         }
       ]
     },
@@ -180,17 +190,17 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, collapsed, onToggleC
       {/* Overlay for mobile */}
       {isOpen && (
         <div 
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden transition-opacity duration-300"
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9998] lg:hidden transition-opacity duration-300"
           onClick={onClose}
         />
       )}
       
       {/* Sidebar */}
       <aside className={`
-        fixed top-0 left-0 h-full bg-white/95 backdrop-blur-xl shadow-strong transform transition-all duration-300 ease-out z-50 border-r border-gray-200/60
+        fixed top-0 left-0 h-full bg-white/95 backdrop-blur-xl shadow-strong transform transition-all duration-300 ease-out z-[9999] border-r border-gray-200/60 flex flex-col
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
-        lg:translate-x-0 lg:fixed lg:z-auto lg:shadow-none
-        ${collapsed ? 'w-20' : 'w-64 sm:w-72 lg:w-80'}
+        lg:translate-x-0 lg:fixed lg:z-[9999] lg:shadow-none
+        ${collapsed ? 'w-20' : 'w-64 sm:w-72 lg:w-80 xl:w-80'}
       `}>
         {/* Sidebar Header */}
         <div className={`border-b border-gray-200/60 ${collapsed ? 'p-3' : 'p-4'}`}>
@@ -214,7 +224,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, collapsed, onToggleC
             </div>
             <button
               onClick={onToggleCollapse}
-              className="p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200 lg:block hidden"
+              className="p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200 md:block hidden"
               title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
             >
               <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -225,109 +235,117 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, collapsed, onToggleC
         </div>
 
         {/* Navigation */}
-        <nav className={`space-y-4 ${collapsed ? 'p-3' : 'p-4'}`}>
-          {menuSections.map((section) => (
-            <div key={section.title}>
-              {/* Section Header */}
-              {!collapsed && (
-                <div className="mb-2">
-                  <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                    {section.title}
-                  </h3>
-                  <div className="mt-1 h-px bg-gradient-to-r from-gray-200 to-transparent"></div>
-                </div>
-              )}
-              
-              {/* Section Items */}
-              <div className="space-y-0.5">
-                {section.items.map((item) => (
-                  <NavLink
-                    key={item.path}
-                    to={item.path}
-                    className={({ isActive }) =>
-                      `flex items-center space-x-2 px-2 py-2 rounded-lg transition-all duration-200 group ${
-                        isActive 
-                          ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600' 
-                          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                      } ${collapsed ? 'justify-center px-1' : ''}`
-                    }
-                    onClick={onClose}
-                    title={collapsed ? item.label : undefined}
-                  >
-                    {({ isActive }) => (
-                      <>
-                        <div className={`flex items-center justify-center ${
-                          isActive ? 'text-blue-600' : 'text-gray-500 group-hover:text-gray-700'
-                        } ${collapsed ? 'w-5 h-5' : 'w-4 h-4'}`}>
-                          {item.icon}
-                        </div>
-                        <div className={`flex-1 min-w-0 ${collapsed ? 'lg:hidden' : ''}`}>
-                          <div className={`font-medium text-xs ${
-                            isActive ? 'text-blue-700' : 'text-gray-900'
-                          }`}>{item.label}</div>
-                          <div className={`text-xs truncate ${
-                            isActive ? 'text-blue-500' : 'text-gray-500'
-                          }`}>{item.description}</div>
-                        </div>
-                        <div className={`${collapsed ? 'lg:hidden' : ''}`}>
-                          {item.path === '/add-ofw' && (
-                            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                          )}
-                          {item.path === '/add-client' && (
-                            <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
-                          )}
-                          {item.path === '/client-reports' && (
-                            <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse"></div>
-                          )}
-                          {item.path === '/survey-list' && (
-                            <div className="w-2 h-2 bg-orange-400 rounded-full animate-pulse"></div>
-                          )}
-                          {item.path === '/survey-analytics' && (
-                            <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
-                          )}
-                          {item.path === '/survey-reports' && (
-                            <div className="w-2 h-2 bg-indigo-400 rounded-full animate-pulse"></div>
-                          )}
-                          {item.path === '/settings' && (
-                            <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
-                          )}
-                        </div>
-                        {collapsed && (
-                          <div className="hidden lg:block">
+        <div className="flex-1 overflow-y-auto">
+          <nav className={`space-y-4 ${collapsed ? 'p-3' : 'p-4'}`}>
+            {menuSections.map((section) => (
+              <div key={section.title}>
+                {/* Section Header */}
+                {!collapsed && (
+                  <div className="mb-2">
+                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                      {section.title}
+                    </h3>
+                    <div className="mt-1 h-px bg-gradient-to-r from-gray-200 to-transparent"></div>
+                  </div>
+                )}
+                
+                {/* Section Items */}
+                <div className="space-y-0.5">
+                  {section.items.map((item) => (
+                    <NavLink
+                      key={item.path}
+                      to={item.path}
+                      className={({ isActive }) =>
+                        `flex items-center space-x-2 px-2 py-2 rounded-lg transition-all duration-200 group ${
+                          isActive 
+                            ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600' 
+                            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                        } ${collapsed ? 'justify-center px-1' : ''}`
+                      }
+                      onClick={onClose}
+                      title={collapsed ? item.label : undefined}
+                    >
+                      {({ isActive }) => (
+                        <>
+                          <div className={`flex items-center justify-center ${
+                            isActive ? 'text-blue-600' : 'text-gray-500 group-hover:text-gray-700'
+                          } ${collapsed ? 'w-5 h-5' : 'w-4 h-4'}`}>
+                            {item.icon}
+                          </div>
+                          <div className={`flex-1 min-w-0 ${collapsed ? 'lg:hidden' : ''}`}>
+                            <div className={`font-medium text-xs ${
+                              isActive ? 'text-blue-700' : 'text-gray-900'
+                            }`}>{item.label}</div>
+                            <div className={`text-xs truncate ${
+                              isActive ? 'text-blue-500' : 'text-gray-500'
+                            }`}>{item.description}</div>
+                          </div>
+                          <div className={`${collapsed ? 'lg:hidden' : ''}`}>
                             {item.path === '/add-ofw' && (
-                              <div className="absolute top-1 right-1 w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
                             )}
                             {item.path === '/add-client' && (
-                              <div className="absolute top-1 right-1 w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
+                              <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
                             )}
                             {item.path === '/client-reports' && (
-                              <div className="absolute top-1 right-1 w-2 h-2 bg-purple-400 rounded-full animate-pulse"></div>
+                              <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse"></div>
                             )}
                             {item.path === '/survey-list' && (
-                              <div className="absolute top-1 right-1 w-2 h-2 bg-orange-400 rounded-full animate-pulse"></div>
+                              <div className="w-2 h-2 bg-orange-400 rounded-full animate-pulse"></div>
                             )}
                             {item.path === '/survey-analytics' && (
-                              <div className="absolute top-1 right-1 w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
+                              <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
                             )}
                             {item.path === '/survey-reports' && (
-                              <div className="absolute top-1 right-1 w-2 h-2 bg-indigo-400 rounded-full animate-pulse"></div>
+                              <div className="w-2 h-2 bg-indigo-400 rounded-full animate-pulse"></div>
+                            )}
+                            {item.path === '/client-suggestions' && (
+                              <div className="w-2 h-2 bg-teal-400 rounded-full animate-pulse"></div>
                             )}
                             {item.path === '/settings' && (
-                              <div className="absolute top-1 right-1 w-2 h-2 bg-gray-400 rounded-full"></div>
+                              <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
                             )}
                           </div>
-                        )}
-                      </>
-                    )}
-                  </NavLink>
-                ))}
+                          {collapsed && (
+                            <div className="hidden lg:block">
+                              {item.path === '/add-ofw' && (
+                                <div className="absolute top-1 right-1 w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                              )}
+                              {item.path === '/add-client' && (
+                                <div className="absolute top-1 right-1 w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
+                              )}
+                              {item.path === '/client-reports' && (
+                                <div className="absolute top-1 right-1 w-2 h-2 bg-purple-400 rounded-full animate-pulse"></div>
+                              )}
+                              {item.path === '/survey-list' && (
+                                <div className="absolute top-1 right-1 w-2 h-2 bg-orange-400 rounded-full animate-pulse"></div>
+                              )}
+                              {item.path === '/survey-analytics' && (
+                                <div className="absolute top-1 right-1 w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
+                              )}
+                              {item.path === '/survey-reports' && (
+                                <div className="absolute top-1 right-1 w-2 h-2 bg-indigo-400 rounded-full animate-pulse"></div>
+                              )}
+                              {item.path === '/client-suggestions' && (
+                                <div className="absolute top-1 right-1 w-2 h-2 bg-teal-400 rounded-full animate-pulse"></div>
+                              )}
+                              {item.path === '/settings' && (
+                                <div className="absolute top-1 right-1 w-2 h-2 bg-gray-400 rounded-full"></div>
+                              )}
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </NavLink>
+                  ))}
+                </div>
               </div>
-            </div>
-          ))}
-        </nav>
+            ))}
+          </nav>
+        </div>
 
         {/* Sidebar Footer */}
-        <div className={`absolute bottom-0 left-0 right-0 border-t border-gray-200/60 bg-gray-50/50 ${collapsed ? 'p-3' : 'p-4'}`}>
+        <div className={`border-t border-gray-200/60 bg-gray-50/50 flex-shrink-0 ${collapsed ? 'p-3' : 'p-4'}`}>
           {/* User Info */}
           <div className="flex items-center space-x-2 mb-3">
             <div className="w-6 h-6 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center">

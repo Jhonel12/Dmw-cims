@@ -7,6 +7,8 @@ use App\Http\Controllers\Api\ClientController;
 use App\Http\Controllers\Api\OFWController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\CustomerFeedbackController;
+use App\Http\Controllers\SurveyAnalyticsController;
+use App\Http\Controllers\SurveyReportsController;
 
 /*
 |--------------------------------------------------------------------------
@@ -84,6 +86,34 @@ Route::middleware('auth:sanctum')->prefix('customer-feedback')->group(function (
     Route::get('/', [CustomerFeedbackController::class, 'index']);
     Route::get('/list', [CustomerFeedbackController::class, 'getSurveyList']);
     Route::get('/statistics', [CustomerFeedbackController::class, 'statistics']);
+});
+
+// Survey Analytics routes (protected)
+Route::middleware('auth:sanctum')->prefix('survey-analytics')->group(function () {
+    Route::get('/', [SurveyAnalyticsController::class, 'getAnalytics']);                    // GET /api/survey-analytics
+    Route::get('/satisfaction-by-service', [SurveyAnalyticsController::class, 'getSatisfactionByService']); // GET /api/survey-analytics/satisfaction-by-service
+    Route::get('/trends', [SurveyAnalyticsController::class, 'getSatisfactionTrends']);     // GET /api/survey-analytics/trends
+    Route::get('/regional', [SurveyAnalyticsController::class, 'getRegionalAnalytics']);   // GET /api/survey-analytics/regional
+    Route::post('/export', [SurveyAnalyticsController::class, 'exportAnalytics']);         // POST /api/survey-analytics/export
+});
+
+// Survey Reports routes (protected)
+Route::middleware('auth:sanctum')->prefix('survey-reports')->group(function () {
+    Route::get('/', [SurveyReportsController::class, 'index']);                             // GET /api/survey-reports
+    Route::post('/generate', [SurveyReportsController::class, 'generateReport']);          // POST /api/survey-reports/generate
+    Route::get('/download/{reportId}', [SurveyReportsController::class, 'downloadReport']); // GET /api/survey-reports/download/{reportId}
+    Route::get('/statistics', [SurveyReportsController::class, 'getStatistics']);          // GET /api/survey-reports/statistics
+    Route::post('/export/csv', [SurveyReportsController::class, 'exportToCsv']);           // POST /api/survey-reports/export/csv
+    Route::post('/export/pdf', [SurveyReportsController::class, 'exportToPdf']);           // POST /api/survey-reports/export/pdf
+});
+
+// Client Suggestions routes (protected)
+Route::middleware('auth:sanctum')->prefix('client-suggestions')->group(function () {
+    Route::get('/', [App\Http\Controllers\ClientSuggestionsController::class, 'index']);              // GET /api/client-suggestions
+    Route::get('/{id}', [App\Http\Controllers\ClientSuggestionsController::class, 'show']);           // GET /api/client-suggestions/{id}
+    Route::get('/statistics', [App\Http\Controllers\ClientSuggestionsController::class, 'getStatistics']); // GET /api/client-suggestions/statistics
+    Route::post('/export/csv', [App\Http\Controllers\ClientSuggestionsController::class, 'exportToCsv']); // POST /api/client-suggestions/export/csv
+    Route::post('/export/pdf', [App\Http\Controllers\ClientSuggestionsController::class, 'exportToPdf']); // POST /api/client-suggestions/export/pdf
 });
 
 // Test route to verify API is working

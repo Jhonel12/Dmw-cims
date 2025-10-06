@@ -33,6 +33,7 @@ interface SurveyResponseTableProps {
   data: SurveyResponse[];
   onView: (response: SurveyResponse) => void;
   onExport?: (response: SurveyResponse) => void;
+  onRefresh?: () => void;
   isLoading?: boolean;
   isInitialLoading?: boolean;
 }
@@ -41,6 +42,7 @@ const SurveyResponseTable: React.FC<SurveyResponseTableProps> = ({
   data, 
   onView, 
   onExport,
+  onRefresh,
   isLoading = false,
   isInitialLoading = false
 }) => {
@@ -377,7 +379,7 @@ const SurveyResponseTable: React.FC<SurveyResponseTableProps> = ({
                   <div className="text-xs text-gray-900">{formatDate(response.created_at)}</div>
                 </td>
                 <td className="px-3 py-2">
-                  <div className="flex items-center space-x-1">
+                  <div className="flex items-center justify-center">
                     <button
                       onClick={() => onView(response)}
                       className="btn btn-ghost text-xs p-1.5 hover:bg-orange-50 hover:text-orange-700"
@@ -388,17 +390,7 @@ const SurveyResponseTable: React.FC<SurveyResponseTableProps> = ({
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                       </svg>
                     </button>
-                    {onExport && (
-                      <button
-                        onClick={() => onExport(response)}
-                        className="btn btn-ghost text-xs p-1.5 hover:bg-blue-50 hover:text-blue-700"
-                        title="Export response"
-                      >
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
-                      </button>
-                    )}
+                  
                   </div>
                 </td>
               </tr>
@@ -416,7 +408,11 @@ const SurveyResponseTable: React.FC<SurveyResponseTableProps> = ({
           </div>
           <h3 className="text-base font-semibold text-gray-900 mb-1">No survey responses found</h3>
           <p className="text-sm text-gray-500 mb-4">Survey responses will appear here once clients start submitting feedback</p>
-          <button className="btn btn-primary text-sm">
+          <button 
+            onClick={onRefresh}
+            disabled={!onRefresh}
+            className="btn btn-primary text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+          >
             <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
             </svg>

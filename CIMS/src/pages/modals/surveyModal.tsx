@@ -391,40 +391,40 @@ export function SurveyModal({
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.95, opacity: 0, y: 20 }}
             transition={{ duration: 0.4, ease: "easeOut" }}
-            className="bg-white w-full max-w-4xl rounded-3xl shadow-2xl max-h-[95vh] flex flex-col overflow-hidden border border-gray-100"
+            className="bg-white w-full max-w-4xl rounded-xl sm:rounded-2xl md:rounded-3xl shadow-2xl max-h-[95vh] flex flex-col overflow-hidden border border-gray-100"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="sticky top-0 bg-white p-4 border-b-2 border-gray-300 z-10">
+            <div className="sticky top-0 bg-white p-3 sm:p-4 md:p-5 border-b-2 border-gray-300 z-10">
               {/* Control Number and ARTA Info */}
-              <div className="flex justify-between items-start mb-2">
-                <div className="text-sm">
+              <div className="flex flex-col sm:flex-row justify-between items-start gap-2 sm:gap-0 mb-2 sm:mb-3">
+                <div className="text-xs sm:text-sm w-full sm:w-auto">
                   <span className="font-semibold">Control No: </span>
-                  <span className="font-mono text-blue-600 bg-blue-50 px-2 py-1 rounded">
+                  <span className="font-mono text-blue-600 bg-blue-50 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded text-xs sm:text-sm">
                     {generateControlNumberBase()}***
                   </span>
-                  <span className="text-xs text-gray-500 ml-2">(ID will be assigned after submission)</span>
+                  <span className="text-[10px] sm:text-xs text-gray-500 ml-1 sm:ml-2 block sm:inline mt-1 sm:mt-0">(ID will be assigned after submission)</span>
                 </div>
-                <div className="text-left border border-gray-400 p-3">
-                  <div className="font-bold text-xs leading-none mb-1" style={{fontSize: '10px'}}>ANTI-RED TAPE AUTHORITY</div>
-                  <div className="font-bold text-xs leading-none mb-1" style={{fontSize: '10px'}}>CLIENT SATISFACTION MEASUREMENT FORM</div>
-                  <div className="text-xs leading-none">PSA Approval No.: ARTA-2242-3</div>
+                <div className="text-left border border-gray-400 p-2 sm:p-3 w-full sm:w-auto">
+                  <div className="font-bold text-[9px] sm:text-[10px] leading-tight mb-0.5 sm:mb-1">ANTI-RED TAPE AUTHORITY</div>
+                  <div className="font-bold text-[9px] sm:text-[10px] leading-tight mb-0.5 sm:mb-1">CLIENT SATISFACTION MEASUREMENT FORM</div>
+                  <div className="text-[10px] sm:text-xs leading-tight">PSA Approval No.: ARTA-2242-3</div>
                 </div>
               </div>
 
               {/* DMW Logo and Title */}
-              <div className="flex items-center justify-center mb-2">
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 mb-2 sm:mb-3">
                 <img
                   src={logo}
                   alt="DMW Logo"
-                  className="h-16 w-16 object-contain mr-4"
+                  className="h-12 w-12 sm:h-14 sm:w-14 md:h-16 md:w-16 object-contain"
                 />
                 <div className="text-center">
-                  <h1 className="text-xl font-bold text-black mb-1">DEPARTMENT OF MIGRANT WORKERS</h1>
-                  <h2 className="text-base font-bold text-black">HELP US SERVE YOU BETTER!</h2>
+                  <h1 className="text-sm sm:text-base md:text-lg lg:text-xl font-bold text-black mb-1">DEPARTMENT OF MIGRANT WORKERS</h1>
+                  <h2 className="text-xs sm:text-sm md:text-base font-bold text-black">HELP US SERVE YOU BETTER!</h2>
                   {/* Client Type Indicator */}
-                  <div className="mt-2">
-                    <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                  <div className="mt-1 sm:mt-2">
+                    <span className={`px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs sm:text-sm font-semibold ${
                       clientType === "walk-in" 
                         ? "bg-blue-100 text-blue-800 border border-blue-300" 
                         : "bg-green-100 text-green-800 border border-green-300"
@@ -436,7 +436,7 @@ export function SurveyModal({
               </div>
 
               {/* Disclaimer */}
-              <div className="text-xs text-gray-700 mb-2 leading-relaxed">
+              <div className="text-[10px] sm:text-xs text-gray-700 mb-2 leading-relaxed">
                 This Client Satisfaction Measurement (CSM) tracks the customer experience of government offices. 
                 Your feedback on your recently concluded transaction will help this office provide a better service. 
                 Personal information shared will be kept confidential and you always have the option to not answer this form.
@@ -445,9 +445,9 @@ export function SurveyModal({
               {/* Close Button */}
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-full transition-colors duration-200"
+                className="absolute top-2 right-2 sm:top-4 sm:right-4 p-1.5 sm:p-2 hover:bg-gray-100 rounded-full transition-colors duration-200"
               >
-                <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
@@ -458,11 +458,11 @@ export function SurveyModal({
               onSubmit={handleSubmit}
               className="overflow-y-auto flex-1 flex flex-col"
             >
-              <div className="px-8 pt-2 pb-8 space-y-8">
+              <div className="px-3 sm:px-4 md:px-6 lg:px-8 pt-2 pb-4 sm:pb-6 md:pb-8 space-y-4 sm:space-y-6 md:space-y-8">
 
               {/* Client Information Section */}
               <div>
-                <h3 className="text-lg font-bold text-black mb-6">Client Information</h3>
+                <h3 className="text-base sm:text-lg font-bold text-black mb-3 sm:mb-4 md:mb-6">Client Information</h3>
                 
                 {/* Client Type */}
                 <div className="mb-6">
@@ -495,7 +495,7 @@ export function SurveyModal({
                 </div>
 
                 {/* Personal Details */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 mb-4 sm:mb-6">
                   <div className="flex items-center">
                     <span className="text-sm font-semibold mr-2 whitespace-nowrap">Date: <span className="text-red-500">*</span></span>
                     <span className="text-sm text-gray-700 border-b border-gray-400 pb-1 flex-1">
@@ -671,42 +671,44 @@ export function SurveyModal({
                 </div>
 
                 {/* SQD Questions Table */}
-                <div className="overflow-x-auto">
-                  <table className="w-full text-xs border border-gray-400 table-fixed">
+                <div className="overflow-x-auto -mx-3 sm:-mx-4 md:-mx-6 lg:-mx-8 px-3 sm:px-4 md:px-6 lg:px-8">
+                  <table className="w-full text-[10px] sm:text-xs border border-gray-400 min-w-[640px]">
                     <thead>
                       <tr className="bg-gray-100">
-                        <th className="border border-gray-400 p-1 text-left font-semibold w-1/2">Questions</th>
-                        <th className="border border-gray-400 p-1 text-center w-1/12 text-xs">
+                        <th className="border border-gray-400 p-0.5 sm:p-1 text-left font-semibold w-1/2">Questions</th>
+                        <th className="border border-gray-400 p-0.5 sm:p-1 text-center w-1/12 text-[9px] sm:text-xs">
                           <div className="flex justify-center">
-                            <AnimatedEmoji type="sad" size={20} />
+                            <AnimatedEmoji type="sad" size={16} />
                           </div>
-                          <div>Strongly Disagree</div>
+                          <div className="hidden sm:block">Strongly Disagree</div>
+                          <div className="sm:hidden">Str. Disagree</div>
                         </th>
-                        <th className="border border-gray-400 p-1 text-center w-1/12 text-xs">
+                        <th className="border border-gray-400 p-0.5 sm:p-1 text-center w-1/12 text-[9px] sm:text-xs">
                           <div className="flex justify-center">
-                            <AnimatedEmoji type="disappointed" size={20} />
+                            <AnimatedEmoji type="disappointed" size={16} />
                           </div>
                           <div>Disagree</div>
                         </th>
-                        <th className="border border-gray-400 p-1 text-center w-1/12 text-xs">
+                        <th className="border border-gray-400 p-0.5 sm:p-1 text-center w-1/12 text-[9px] sm:text-xs">
                           <div className="flex justify-center">
-                            <AnimatedEmoji type="neutral" size={20} />
+                            <AnimatedEmoji type="neutral" size={16} />
                           </div>
                           <div>Neither</div>
                         </th>
-                        <th className="border border-gray-400 p-1 text-center w-1/12 text-xs">
+                        <th className="border border-gray-400 p-0.5 sm:p-1 text-center w-1/12 text-[9px] sm:text-xs">
                           <div className="flex justify-center">
-                            <AnimatedEmoji type="happy" size={20} />
+                            <AnimatedEmoji type="happy" size={16} />
                           </div>
                           <div>Agree</div>
                         </th>
-                        <th className="border border-gray-400 p-1 text-center w-1/12 text-xs">
+                        <th className="border border-gray-400 p-0.5 sm:p-1 text-center w-1/12 text-[9px] sm:text-xs">
                           <div className="flex justify-center">
-                            <AnimatedEmoji type="excited" size={20} />
+                            <AnimatedEmoji type="excited" size={16} />
                           </div>
-                          <div>Strongly Agree</div>
+                          <div className="hidden sm:block">Strongly Agree</div>
+                          <div className="sm:hidden">Str. Agree</div>
                         </th>
-                        <th className="border border-gray-400 p-1 text-center w-1/12 text-xs">
+                        <th className="border border-gray-400 p-0.5 sm:p-1 text-center w-1/12 text-[9px] sm:text-xs">
                           <div>N/A</div>
                         </th>
                       </tr>
@@ -724,15 +726,15 @@ export function SurveyModal({
                         { key: "sqd8", question: "I got what I needed from the government office, or (if denied) denial of request was sufficiently explained to me.", required: true }
                       ].map(({ key, question, required }) => (
                         <tr key={key} className={getErrorMessage(key) ? "bg-red-50" : ""}>
-                          <td className="border border-gray-400 p-1 font-medium text-xs leading-tight">
+                          <td className="border border-gray-400 p-0.5 sm:p-1 font-medium text-[10px] sm:text-xs leading-tight">
                             {question}
                             {required && <span className="text-red-500 ml-1">*</span>}
                             {getErrorMessage(key) && (
-                              <div className="text-red-500 text-xs mt-1">{getErrorMessage(key)}</div>
+                              <div className="text-red-500 text-[9px] sm:text-xs mt-1">{getErrorMessage(key)}</div>
                             )}
                           </td>
                           {["1", "2", "3", "4", "5", "6"].map((value) => (
-                            <td key={value} className="border border-gray-400 p-1 text-center">
+                            <td key={value} className="border border-gray-400 p-0.5 sm:p-1 text-center">
                               <label className="block">
                                 <input
                                   type="checkbox"
@@ -741,7 +743,7 @@ export function SurveyModal({
                                   checked={formData[key as keyof SurveyData] === value}
                                   onChange={handleChange}
                                   onBlur={handleBlur}
-                                  className="w-3 h-3 focus:outline-none focus:ring-0 no-animation-checkbox"
+                                  className="w-3 h-3 sm:w-3.5 sm:h-3.5 focus:outline-none focus:ring-0 no-animation-checkbox"
                                 />
                               </label>
                             </td>
@@ -796,18 +798,18 @@ export function SurveyModal({
               </div>
 
               {/* Footer */}
-              <div className="sticky bottom-0 bg-white p-6 border-t-2 border-gray-300 flex justify-end gap-4 z-10">
+              <div className="sticky bottom-0 bg-white p-3 sm:p-4 md:p-6 border-t-2 border-gray-300 flex flex-col sm:flex-row justify-end gap-2 sm:gap-3 md:gap-4 z-10">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 border border-gray-400 text-gray-700 hover:bg-gray-50 transition-colors duration-200"
+                  className="px-4 py-2 border border-gray-400 text-sm sm:text-base text-gray-700 hover:bg-gray-50 transition-colors duration-200 order-2 sm:order-1"
                 >
                   Cancel
                 </button>
                 <button
   type="submit"
   disabled={isSubmitting}
-  className="px-6 py-2 bg-blue-600 text-white hover:bg-blue-700 transition-colors duration-200 disabled:bg-blue-400 disabled:cursor-not-allowed"
+  className="px-4 sm:px-6 py-2 bg-blue-600 text-sm sm:text-base text-white hover:bg-blue-700 transition-colors duration-200 disabled:bg-blue-400 disabled:cursor-not-allowed order-1 sm:order-2"
 >
   {isSubmitting ? 'Submitting...' : 'Submit Survey'}
 </button>

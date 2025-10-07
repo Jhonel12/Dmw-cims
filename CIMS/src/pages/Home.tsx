@@ -1,615 +1,12 @@
-import { motion, AnimatePresence } from "framer-motion";
-import React, { useState } from "react";
+import { useState } from "react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import bgImage from "../assets/dmw2.jpg";
 import logo from "../assets/dmwlogo2.svg";
 import smallLogo from "../assets/registration.png";
-import bagongLogo from "../assets/bagong.png";
 import { SurveyModal } from "./modals/surveyModal";
 import { ToastContainer, useToast } from "../toaster/customtoast";
-
-type ClientInfoModalProps = {
-  isModalOpen: boolean;
-  setIsModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  onSuccess: () => void;
-};
-
-export function ClientInfoModal({
-  isModalOpen,
-  setIsModalOpen,
-  onSuccess,
-}: ClientInfoModalProps) {
-  // ✅ Typed Form Data
-  interface FormData {
-    firstName: string;
-    middleName: string;
-    lastName: string;
-    suffix: string;
-    dob: string;
-    age: string;
-    civil: string;
-    sex: string;
-    tel: string;
-    email: string;
-    houseNo: string;
-    street: string;
-    barangay: string;
-    city: string;
-    province: string;
-    region: string;
-    zip: string;
-    emergencyName: string;
-    emergencyTel: string;
-    emergencyRelation: string;
-    social: string[];
-    socialOther: string;
-    hasNationalId: string;
-    nationalIdNo: string;
-  }
-
-  const initialFormData: FormData = {
-    firstName: "",
-    middleName: "",
-    lastName: "",
-    suffix: "",
-    dob: "",
-    age: "",
-    civil: "",
-    sex: "",
-    tel: "",
-    email: "",
-    houseNo: "",
-    street: "",
-    barangay: "",
-    city: "",
-    province: "",
-    region: "",
-    zip: "",
-    emergencyName: "",
-    emergencyTel: "",
-    emergencyRelation: "",
-    social: [],
-    socialOther: "",
-    hasNationalId: "",
-    nationalIdNo: "",
-  };
-
-  const [formData, setFormData] = useState<FormData>(initialFormData);
-
-  // ✅ Track touched fields (for validation)
-  const [touched, setTouched] = useState<Record<string, boolean>>({});
-
-  // ✅ Utility: Input validation class
-  const getInputClass = (field: string) => {
-    if (!touched[field]) return "border-gray-300";
-    const value = formData[field as keyof FormData];
-    const hasError = validateForm()[field];
-    return hasError
-      ? "border-red-500 focus:ring-red-500"
-      : value
-      ? "border-green-500 focus:ring-green-500"
-      : "border-gray-300";
-  };
-
-  // ✅ Utility: Get error message
-  const getErrorMessage = (field: string) => {
-    if (!touched[field]) return null;
-    return validateForm()[field] || null;
-  };
-
-  // ✅ Handle input changes
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type } = e.target;
-
-    if (type === "checkbox") {
-      setFormData((prev) => {
-        if (name === "socialOther") {
-          return { ...prev, socialOther: value };
-        }
-        const social = prev.social.includes(value)
-          ? prev.social.filter((s) => s !== value)
-          : [...prev.social, value];
-        return { ...prev, social };
-      });
-    } else {
-      setFormData({ ...formData, [name]: value });
-
-      // ✅ Auto-calc age from DOB
-      if (name === "dob") {
-        const birthDate = new Date(value);
-        if (!isNaN(birthDate.getTime())) {
-          const age = new Date().getFullYear() - birthDate.getFullYear();
-          setFormData((prev) => ({ ...prev, age: String(age) }));
-        }
-      }
-    }
-  };
-
-  const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
-    setTouched({ ...touched, [e.target.name]: true });
-  };
-
-  // Validation function
-  const validateForm = () => {
-    const errors: Record<string, string> = {};
-    
-    // Required fields validation
-    if (!formData.firstName.trim()) errors.firstName = "First name is required";
-    if (!formData.lastName.trim()) errors.lastName = "Last name is required";
-    if (!formData.dob) errors.dob = "Date of birth is required";
-    if (!formData.civil) errors.civil = "Civil status is required";
-    if (!formData.sex) errors.sex = "Sex is required";
-    if (!formData.tel.trim()) errors.tel = "Telephone/Mobile is required";
-    if (!formData.email.trim()) errors.email = "Email is required";
-    if (!formData.houseNo.trim()) errors.houseNo = "House number is required";
-    if (!formData.street.trim()) errors.street = "Street is required";
-    if (!formData.barangay.trim()) errors.barangay = "Barangay is required";
-    if (!formData.city.trim()) errors.city = "City is required";
-    if (!formData.province.trim()) errors.province = "Province is required";
-    if (!formData.region.trim()) errors.region = "Region is required";
-    if (!formData.zip.trim()) errors.zip = "Zip code is required";
-    if (!formData.emergencyName.trim()) errors.emergencyName = "Emergency contact name is required";
-    if (!formData.emergencyTel.trim()) errors.emergencyTel = "Emergency contact number is required";
-    if (!formData.emergencyRelation.trim()) errors.emergencyRelation = "Emergency contact relation is required";
-    if (!formData.hasNationalId) errors.hasNationalId = "Please specify if you have a National ID";
-    
-    // Email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (formData.email && !emailRegex.test(formData.email)) {
-      errors.email = "Please enter a valid email address";
-    }
-    
-    // National ID validation
-    if (formData.hasNationalId === "Yes" && !formData.nationalIdNo.trim()) {
-      errors.nationalIdNo = "National ID number is required when you have a National ID";
-    }
-    
-    return errors;
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // Validate form
-    const errors = validateForm();
-    
-    if (Object.keys(errors).length > 0) {
-      // Mark all fields as touched to show validation errors
-      const touchedFields: Record<string, boolean> = {};
-      Object.keys(errors).forEach(field => {
-        touchedFields[field] = true;
-      });
-      setTouched(touchedFields);
-      return;
-    }
-    
-    console.log("Form Submitted:", formData);
-    
-    // Clear form data
-    setFormData(initialFormData);
-    setTouched({});
-    
-    // Close modal and trigger success toast
-    setIsModalOpen(false);
-    onSuccess();
-  };
-
-  if (!isModalOpen) return null;
-
-  return (
-    <AnimatePresence>
-      {isModalOpen && (
-        <motion.div
-          key="modal-backdrop"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.3 }}
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
-        >
-          <motion.div
-            key="modal-content"
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.9, opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            className="bg-white w-11/12 md:w-4/5 lg:w-3/4 rounded-2xl shadow-xl max-h-[90vh] flex flex-col"
-          >
-            {/* Header */}
-            <div className="sticky top-0 bg-white p-4 border-b flex items-center justify-between rounded-t-2xl z-10 relative">
-              {/* Left Logo */}
-              <img
-                src={logo}
-                alt="Left Logo"
-                className="h-14 w-auto object-contain"
-              />
-
-              {/* Title (centered) */}
-              <h2 className="absolute left-1/2 transform -translate-x-1/2 text-2xl font-bold text-blue-900">
-                Client Information Form
-              </h2>
-
-              <div className="flex items-center gap-2">
-                {/* Right Logo */}
-                <img
-                  src={bagongLogo}
-                  alt="Right Logo"
-                  className="h-14 w-auto object-contain"
-                />
-
-                {/* Close Button */}
-                <button
-                  onClick={() => setIsModalOpen(false)}
-                  className="text-gray-600 hover:text-black text-2xl"
-                >
-                  ✖
-                </button>
-              </div>
-            </div>
-            {/* Form */}
-            <form
-              onSubmit={handleSubmit}
-              className="overflow-y-auto p-6 space-y-6 flex-1 flex flex-col"
-            >
-              {/* Names */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                {["firstName", "middleName", "lastName", "suffix"].map(
-                  (field, i) => (
-                    <div key={field} className="relative">
-                      <input
-                        type="text"
-                        name={field}
-                        value={formData[field as keyof FormData]}
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                        className={`peer w-full border rounded-lg px-3 pt-5 pb-2 focus:outline-none focus:ring-2 ${getInputClass(
-                          field as keyof FormData
-                        )}`}
-                        placeholder=" "
-                        required={["firstName", "lastName"].includes(field)}
-                      />
-                      <label
-                        className="absolute left-3 top-2 text-gray-500 text-sm transition-all
-                           peer-placeholder-shown:top-5 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400
-                           peer-focus:top-2 peer-focus:text-sm peer-focus:text-blue-600"
-                      >
-                        {
-                          ["First Name", "Middle Name", "Last Name", "Suffix"][
-                            i
-                          ]
-                        }
-                        {["firstName", "lastName"].includes(field) && <span className="text-red-500 ml-1">*</span>}
-                      </label>
-                      {getErrorMessage(field) && (
-                        <p className="text-red-500 text-xs mt-1">{getErrorMessage(field)}</p>
-                      )}
-                    </div>
-                  )
-                )}
-              </div>
-
-              {/* DOB + Age */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="relative">
-                  <input
-                    type="date"
-                    name="dob"
-                    value={formData.dob}
-                    onChange={handleChange}
-                    onBlur={handleBlur}
-                    className={`peer w-full border rounded-lg px-3 pt-5 pb-2 focus:outline-none focus:ring-2 ${getInputClass(
-                      "dob"
-                    )}`}
-                    placeholder=" "
-                    required
-                  />
-                  <label className="absolute left-3 top-2 text-gray-500 text-sm transition-all peer-placeholder-shown:top-5 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-focus:top-2 peer-focus:text-sm peer-focus:text-blue-600">
-                    Date of Birth <span className="text-red-500 ml-1">*</span>
-                  </label>
-                  {getErrorMessage("dob") && (
-                    <p className="text-red-500 text-xs mt-1">{getErrorMessage("dob")}</p>
-                  )}
-                </div>
-                <div className="relative">
-                  <input
-                    type="number"
-                    name="age"
-                    value={formData.age}
-                    readOnly
-                    className="peer w-full border rounded-lg px-3 pt-5 pb-2 bg-gray-100"
-                    placeholder=" "
-                  />
-                  <label className="absolute left-3 top-2 text-gray-500 text-sm transition-all peer-placeholder-shown:top-5 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-focus:top-2 peer-focus:text-sm peer-focus:text-blue-600">
-                    Age (Auto-calculated)
-                  </label>
-                </div>
-              </div>
-
-              {/* Civil Status & Sex */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className={`border p-3 rounded ${getInputClass("civil").includes("red") ? "border-red-500" : ""}`}>
-                  <label className="block font-semibold text-sm mb-2">
-                    Civil Status <span className="text-red-500 ml-1">*</span>
-                  </label>
-                  <div className="flex flex-wrap gap-3 text-sm">
-                    {["Single", "Married", "Legally Separated", "Widowed"].map(
-                      (status) => (
-                        <label key={status}>
-                          <input
-                            type="radio"
-                            name="civil"
-                            value={status}
-                            checked={formData.civil === status}
-                            onChange={handleChange}
-                            required
-                          />{" "}
-                          {status}
-                        </label>
-                      )
-                    )}
-                  </div>
-                  {getErrorMessage("civil") && (
-                    <p className="text-red-500 text-xs mt-2">{getErrorMessage("civil")}</p>
-                  )}
-                </div>
-                <div className={`border p-3 rounded ${getInputClass("sex").includes("red") ? "border-red-500" : ""}`}>
-                  <label className="block font-semibold text-sm mb-2">
-                    Sex <span className="text-red-500 ml-1">*</span>
-                  </label>
-                  <div className="flex gap-6 text-sm">
-                    {["Male", "Female"].map((sex) => (
-                      <label key={sex}>
-                        <input
-                          type="radio"
-                          name="sex"
-                          value={sex}
-                          checked={formData.sex === sex}
-                          onChange={handleChange}
-                          required
-                        />{" "}
-                        {sex}
-                      </label>
-                    ))}
-                  </div>
-                  {getErrorMessage("sex") && (
-                    <p className="text-red-500 text-xs mt-2">{getErrorMessage("sex")}</p>
-                  )}
-                </div>
-              </div>
-
-              {/* Social Classification */}
-              <div className="border p-3 rounded">
-                <label className="block font-semibold text-sm mb-2">
-                  Social Classification
-                </label>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
-                  {[
-                    "4Ps",
-                    "Senior Citizen",
-                    "PWD",
-                    "Solo Parent",
-                    "Indigenous",
-                    "Others",
-                  ].map((social) => (
-                    <label key={social}>
-                      <input
-                        type="checkbox"
-                        name="social"
-                        value={social}
-                        checked={formData.social.includes(social)}
-                        onChange={handleChange}
-                      />{" "}
-                      {social}
-                    </label>
-                  ))}
-                </div>
-                {formData.social.includes("Others") && (
-                  <div className="relative mt-2">
-                    <input
-                      type="text"
-                      name="socialOther"
-                      value={formData.socialOther}
-                      onChange={handleChange}
-                      className="peer w-full border rounded-lg px-3 pt-5 pb-2"
-                      placeholder=" "
-                    />
-                    <label className="absolute left-3 top-2 text-gray-500 text-sm transition-all peer-placeholder-shown:top-5 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-focus:top-2 peer-focus:text-sm peer-focus:text-blue-600">
-                      Please specify
-                    </label>
-                  </div>
-                )}
-              </div>
-
-              {/* Contact */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {["tel", "email"].map((field, i) => (
-                  <div key={field} className="relative">
-                    <input
-                      type={field === "email" ? "email" : "tel"}
-                      name={field}
-                      value={formData[field as keyof FormData]}
-                      onChange={handleChange}
-                      onBlur={handleBlur}
-                      className={`peer w-full border rounded-lg px-3 pt-5 pb-2 focus:outline-none focus:ring-2 ${getInputClass(
-                        field as keyof FormData
-                      )}`}
-                      placeholder=" "
-                      required
-                    />
-                    <label className="absolute left-3 top-2 text-gray-500 text-sm transition-all peer-placeholder-shown:top-5 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-focus:top-2 peer-focus:text-sm peer-focus:text-blue-600">
-                      {["Telephone / Mobile", "Email"][i]} <span className="text-red-500 ml-1">*</span>
-                    </label>
-                    {getErrorMessage(field) && (
-                      <p className="text-red-500 text-xs mt-1">{getErrorMessage(field)}</p>
-                    )}
-                  </div>
-                ))}
-              </div>
-
-              {/* Address Section */}
-              <div className="mt-6">
-                <p className="mb-2 text-gray-700 font-medium">Home Address</p>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {["houseNo", "street", "barangay", "city"].map((field, i) => (
-                    <div key={field} className="relative">
-                      <input
-                        type="text"
-                        name={field}
-                        value={formData[field as keyof FormData]}
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                        className={`peer w-full border rounded-lg px-3 pt-5 pb-2 focus:outline-none focus:ring-2 ${getInputClass(
-                          field as keyof FormData
-                        )}`}
-                        placeholder=" "
-                        required
-                      />
-                      <label className="absolute left-3 top-2 text-gray-500 text-sm transition-all peer-placeholder-shown:top-5 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-focus:top-2 peer-focus:text-sm peer-focus:text-blue-600">
-                        {["House No.", "Street", "Barangay", "City"][i]} <span className="text-red-500 ml-1">*</span>
-                      </label>
-                      {getErrorMessage(field) && (
-                        <p className="text-red-500 text-xs mt-1">{getErrorMessage(field)}</p>
-                      )}
-                    </div>
-                  ))}
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                  {["province", "region", "zip"].map((field, i) => (
-                    <div key={field} className="relative">
-                      <input
-                        type="text"
-                        name={field}
-                        value={formData[field as keyof FormData]}
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                        className={`peer w-full border rounded-lg px-3 pt-5 pb-2 focus:outline-none focus:ring-2 ${getInputClass(
-                          field as keyof FormData
-                        )}`}
-                        placeholder=" "
-                        required
-                      />
-                      <label className="absolute left-3 top-2 text-gray-500 text-sm transition-all peer-placeholder-shown:top-5 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-focus:top-2 peer-focus:text-sm peer-focus:text-blue-600">
-                        {["Province", "Region", "Zip Code"][i]} <span className="text-red-500 ml-1">*</span>
-                      </label>
-                      {getErrorMessage(field) && (
-                        <p className="text-red-500 text-xs mt-1">{getErrorMessage(field)}</p>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Emergency Contact Section */}
-              <div className="mt-6">
-                <p className="mb-2 text-gray-700 font-medium">
-                  Emergency Contact
-                </p>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {["emergencyName", "emergencyTel", "emergencyRelation"].map(
-                    (field, i) => (
-                      <div key={field} className="relative">
-                        <input
-                          type="text"
-                          name={field}
-                          value={formData[field as keyof FormData]}
-                          onChange={handleChange}
-                          onBlur={handleBlur}
-                          className={`peer w-full border rounded-lg px-3 pt-5 pb-2 focus:outline-none focus:ring-2 ${getInputClass(
-                            field as keyof FormData
-                          )}`}
-                          placeholder=" "
-                          required
-                        />
-                        <label className="absolute left-3 top-2 text-gray-500 text-sm transition-all peer-placeholder-shown:top-5 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-focus:top-2 peer-focus:text-sm peer-focus:text-blue-600">
-                          {
-                            [
-                              "Name",
-                              "Telephone/Mobile No.",
-                              "Nature of Relation",
-                            ][i]
-                          } <span className="text-red-500 ml-1">*</span>
-                        </label>
-                        {getErrorMessage(field) && (
-                          <p className="text-red-500 text-xs mt-1">{getErrorMessage(field)}</p>
-                        )}
-                      </div>
-                    )
-                  )}
-                </div>
-              </div>
-
-              {/* National ID */}
-              <div className={`border p-3 rounded ${getInputClass("hasNationalId").includes("red") ? "border-red-500" : ""}`}>
-                <label className="block font-semibold text-sm mb-2">
-                  Do you have a National ID? <span className="text-red-500 ml-1">*</span>
-                </label>
-                <div className="flex gap-6 text-sm">
-                  {["Yes", "No"].map((option) => (
-                    <label key={option}>
-                      <input
-                        type="radio"
-                        name="hasNationalId"
-                        value={option}
-                        checked={formData.hasNationalId === option}
-                        onChange={handleChange}
-                        required
-                      />{" "}
-                      {option}
-                    </label>
-                  ))}
-                </div>
-                {getErrorMessage("hasNationalId") && (
-                  <p className="text-red-500 text-xs mt-2">{getErrorMessage("hasNationalId")}</p>
-                )}
-                {formData.hasNationalId === "Yes" && (
-                  <div className="relative mt-3">
-                    <input
-                      type="text"
-                      name="nationalIdNo"
-                      value={formData.nationalIdNo}
-                      onChange={handleChange}
-                      onBlur={handleBlur}
-                      className={`peer w-full border rounded-lg px-3 pt-5 pb-2 focus:outline-none focus:ring-2 ${getInputClass("nationalIdNo")}`}
-                      placeholder=" "
-                      required
-                    />
-                    <label className="absolute left-3 top-2 text-gray-500 text-sm transition-all peer-placeholder-shown:top-5 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-focus:top-2 peer-focus:text-sm peer-focus:text-blue-600">
-                      National ID No. <span className="text-red-500 ml-1">*</span>
-                    </label>
-                    {getErrorMessage("nationalIdNo") && (
-                      <p className="text-red-500 text-xs mt-1">{getErrorMessage("nationalIdNo")}</p>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* Footer */}
-              <div className="sticky bottom-0 bg-white p-4 border-t flex justify-end gap-3 rounded-b-2xl z-10">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-6 py-2 bg-blue-700 text-white rounded-lg hover:bg-blue-800"
-                >
-                  Submit
-                </button>
-              </div>
-            </form>
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  );
-}
+import AddClientModal from "../modals/addClientModal";
 
 // ✅ Default export Home
 export default function Home() {
@@ -653,43 +50,42 @@ export default function Home() {
 
       <Header />
 
-      {/* Add some top padding so content sits below header */}
-      <main className="flex-1 relative z-10 container mx-auto px-6 pt-40">
+      {/* Add some top padding so content sits below header - responsive padding */}
+      <main className="flex-1 relative z-10 container mx-auto px-3 sm:px-4 md:px-6 pt-24 sm:pt-28 md:pt-32 lg:pt-36 pb-16 sm:pb-20 md:pb-24">
         {/* Grid: center content spans 2 columns on large screens, right column is 1 */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8 items-start">
           {/* ---------- CENTER SURVEY CARD (spans 2 cols on large) ---------- */}
           <div className="lg:col-span-2 flex justify-center">
             <div
-              className="relative w-full max-w-2xl rounded-2xl bg-white/85 backdrop-blur-sm shadow-2xl p-8 text-center"
-              style={{ minHeight: 300 }}
+              className="relative w-full max-w-xl rounded-lg md:rounded-xl bg-white/85 backdrop-blur-sm shadow-2xl p-3 sm:p-4 md:p-6 text-center"
             >
-              {/* circular logo overlapping top */}
+              {/* circular logo overlapping top - responsive sizing */}
               <div className="absolute left-1/2 top-0 transform -translate-x-1/2 -translate-y-1/2">
                 <div className="bg-white rounded-full p-1 shadow">
                   <img
                     src={logo}
                     alt="dmw"
-                    className="h-20 w-20 object-contain"
+                    className="h-10 w-10 sm:h-12 sm:w-12 md:h-14 md:w-14 object-contain"
                   />
                 </div>
               </div>
 
               {/* spacer for the overlapping logo */}
-              <div className="pt-14">
-                <h2 className="text-2xl sm:text-3xl font-semibold mb-4">
+              <div className="pt-7 sm:pt-8 md:pt-10">
+                <h2 className="text-sm sm:text-base md:text-lg lg:text-xl font-semibold mb-2 sm:mb-2.5 md:mb-3 px-2">
                   DMW Client Satisfaction Survey
                 </h2>
 
-                <div className="mt-6 flex flex-col sm:flex-row gap-4 justify-center">
+                <div className="mt-3 sm:mt-4 md:mt-5 flex flex-col sm:flex-row gap-2 sm:gap-3 justify-center items-center">
                   <button 
                     onClick={() => handleSurveyClick("walk-in")}
-                    className="px-6 py-3 bg-blue-500 text-white font-bold rounded-lg shadow hover:bg-blue-600 transition w-44"
+                    className="px-4 sm:px-5 py-2 sm:py-2.5 bg-blue-500 text-white text-xs sm:text-sm font-bold rounded-lg shadow hover:bg-blue-600 transition w-full sm:w-36 max-w-xs"
                   >
                     Walk-in Client
                   </button>
                   <button 
                     onClick={() => handleSurveyClick("online")}
-                    className="px-6 py-3 bg-blue-500 text-white font-bold rounded-lg shadow hover:bg-blue-600 transition w-44"
+                    className="px-4 sm:px-5 py-2 sm:py-2.5 bg-blue-500 text-white text-xs sm:text-sm font-bold rounded-lg shadow hover:bg-blue-600 transition w-full sm:w-36 max-w-xs"
                   >
                     Online Client
                   </button>
@@ -699,19 +95,19 @@ export default function Home() {
           </div>
 
           {/* ---------- RIGHT-SIDE CARDS ---------- */}
-          <aside className="lg:col-span-1">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 justify-items-stretch content-stretch">
+          <aside className="lg:col-span-1 w-full">
+            <div className="grid grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 gap-2 sm:gap-2.5 justify-items-stretch content-stretch">
               {/* Citizen's Charter */}
               <a
-                href="/files/Citizens-Charter.pdf" // <-- replace with your actual PDF path
+                href="/files/Citizens-Charter.pdf"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="block"
               >
-                <div className="bg-white rounded-xl shadow p-4 flex flex-col justify-between h-full transform transition duration-300 hover:scale-105 hover:shadow-xl cursor-pointer">
-                  <img src={logo} alt="logo" className="w-16 h-14 mx-auto" />
-                  <span className="font-bold text-lg text-blue-900 text-center mt-2">
-                    DMW RO-X <br /> Citizen’s Charter
+                <div className="bg-white rounded-md sm:rounded-lg shadow p-2 sm:p-3 flex flex-col justify-between h-full min-h-[100px] sm:min-h-[110px] transform transition duration-300 hover:scale-105 hover:shadow-xl cursor-pointer">
+                  <img src={logo} alt="logo" className="w-10 h-8 sm:w-11 sm:h-9 md:w-12 md:h-10 mx-auto" />
+                  <span className="font-bold text-xs sm:text-sm md:text-base text-blue-900 text-center mt-1.5">
+                    DMW RO-X <br /> Citizen's Charter
                   </span>
                 </div>
               </a>
@@ -721,33 +117,33 @@ export default function Home() {
                 href="https://www.facebook.com/dmw.gov.ph"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="block w-full sm:w-auto h-full"
+                className="block w-full h-full"
               >
-                <div className="bg-blue-500 rounded-xl shadow p-4 flex justify-between items-center gap-4 h-full transform transition duration-300 hover:scale-105 hover:shadow-xl hover:bg-sky-600">
+                <div className="bg-blue-500 rounded-md sm:rounded-lg shadow p-2 sm:p-3 flex justify-between items-center gap-1.5 sm:gap-2 md:gap-3 h-full min-h-[100px] sm:min-h-[110px] transform transition duration-300 hover:scale-105 hover:shadow-xl hover:bg-sky-600">
                   <div className="flex flex-col text-white">
-                    <span className="font-bold text-xl leading-tight">
+                    <span className="font-bold text-sm sm:text-base md:text-lg leading-tight">
                       OFFICIAL
                     </span>
-                    <span className="font-bold text-xl leading-tight">
+                    <span className="font-bold text-sm sm:text-base md:text-lg leading-tight">
                       FACEBOOK
                     </span>
-                    <span className="font-bold text-xl leading-tight">
+                    <span className="font-bold text-sm sm:text-base md:text-lg leading-tight">
                       PAGE
                     </span>
                   </div>
                   <img
                     src="/facebook-like.svg"
                     alt="Facebook"
-                    className="w-12 h-12 flex-shrink-0"
+                    className="w-8 h-8 sm:w-9 sm:h-9 flex-shrink-0"
                   />
                 </div>
               </a>
 
               {/* Email */}
-              <div className="bg-blue-700 text-white rounded-xl shadow p-4 flex items-start gap-4 w-full sm:w-auto h-full transform transition duration-300 hover:scale-105 hover:shadow-xl">
-                <div className="bg-white/20 rounded p-2 flex items-center justify-center">
+              <div className="bg-blue-700 text-white rounded-md sm:rounded-lg shadow p-2 sm:p-3 flex items-start gap-1.5 sm:gap-2 md:gap-3 w-full h-full min-h-[100px] sm:min-h-[110px] transform transition duration-300 hover:scale-105 hover:shadow-xl">
+                <div className="bg-white/20 rounded p-1 sm:p-1.5 flex items-center justify-center flex-shrink-0">
                   <svg
-                    className="w-6 h-6"
+                    className="w-4 h-4 sm:w-5 sm:h-5"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
@@ -770,22 +166,22 @@ export default function Home() {
                     />
                   </svg>
                 </div>
-                <div className="flex flex-col justify-start">
-                  <p className="font-bold text-2xl">Email us</p>
-                  <p className="text-sm mt-8">cdo@dmw.gov.ph</p>
+                <div className="flex flex-col justify-start min-w-0">
+                  <p className="font-bold text-sm sm:text-base md:text-lg">Email us</p>
+                  <p className="text-[10px] sm:text-xs mt-1 sm:mt-2 md:mt-4 break-all">cdo@dmw.gov.ph</p>
                 </div>
               </div>
 
               {/* ✅ Register Here with Modal Trigger */}
               <button
                 onClick={() => setIsModalOpen(true)}
-                className="bg-white rounded-xl shadow p-4 flex items-start gap-4 w-full sm:w-auto h-full transform transition duration-300 hover:scale-105 hover:shadow-xl text-left"
+                className="bg-white rounded-md sm:rounded-lg shadow p-2 sm:p-3 flex items-start gap-1.5 sm:gap-2 md:gap-3 w-full h-full min-h-[100px] sm:min-h-[110px] transform transition duration-300 hover:scale-105 hover:shadow-xl text-left"
               >
-                <div className="flex items-center justify-center">
-                  <img src={smallLogo} alt="logo" className="h-10 mt-1" />
+                <div className="flex items-center justify-center flex-shrink-0">
+                  <img src={smallLogo} alt="logo" className="h-6 sm:h-7 md:h-8 mt-0.5" />
                 </div>
                 <div className="flex flex-col justify-start">
-                  <p className="font-bold text-lg">Register Here</p>
+                  <p className="font-bold text-sm sm:text-base">Register Here</p>
                 </div>
               </button>
 
@@ -794,12 +190,12 @@ export default function Home() {
                 href="https://dmw.gov.ph/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="block w-full sm:w-auto"
+                className="block w-full"
               >
-                <div className="bg-white rounded-xl shadow p-4 flex items-start gap-4 h-full transform transition duration-300 hover:scale-105 hover:shadow-xl cursor-pointer">
-                  <div className="bg-blue-100 rounded p-2 flex items-center justify-center">
+                <div className="bg-white rounded-md sm:rounded-lg shadow p-2 sm:p-3 flex items-start gap-1.5 sm:gap-2 md:gap-3 h-full min-h-[100px] sm:min-h-[110px] transform transition duration-300 hover:scale-105 hover:shadow-xl cursor-pointer">
+                  <div className="bg-blue-100 rounded p-1 sm:p-1.5 flex items-center justify-center flex-shrink-0">
                     <svg
-                      className="w-6 h-6 text-blue-700"
+                      className="w-4 h-4 sm:w-5 sm:h-5 text-blue-700"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -812,11 +208,11 @@ export default function Home() {
                       />
                     </svg>
                   </div>
-                  <div className="flex flex-col justify-start">
-                    <p className="text-blue-700 font-bold text-2xl">
+                  <div className="flex flex-col justify-start min-w-0">
+                    <p className="text-blue-700 font-bold text-sm sm:text-base md:text-lg">
                       For more Info
                     </p>
-                    <p className="text-sm mt-1 italic text-sky-500">
+                    <p className="text-[10px] sm:text-xs mt-0.5 italic text-sky-500 break-words">
                       Visit our Site <br /> dmw.gov.ph
                     </p>
                   </div>
@@ -824,15 +220,15 @@ export default function Home() {
               </a>
 
               {/* Hotlines */}
-              <div className="bg-white rounded-xl shadow p-4 w-full sm:w-auto h-full transform transition duration-300 hover:scale-105 hover:shadow-xl border-2 border-orange-500">
-                <p className="text-orange-600 font-bold mb-2 underline decoration-orange-600 decoration-2">
+              <div className="bg-white rounded-md sm:rounded-lg shadow p-2 sm:p-3 w-full h-full min-h-[100px] sm:min-h-[110px] transform transition duration-300 hover:scale-105 hover:shadow-xl border-2 border-orange-500">
+                <p className="text-orange-600 font-bold text-xs sm:text-sm mb-1.5 underline decoration-orange-600 decoration-2">
                   DMW HOTLINES
                 </p>
-                <ul className="text-sm space-y-1">
-                  <li>📞 (088)880 6414</li>
-                  <li>📞 09569418162 - MWPD</li>
-                  <li>📞 09171928836 - MWPTD</li>
-                  <li>📞 09171354195 - WRSD</li>
+                <ul className="text-[10px] sm:text-xs space-y-0.5">
+                  <li className="break-all">📞 (088)880 6414</li>
+                  <li className="break-all">📞 09569418162 - MWPD</li>
+                  <li className="break-all">📞 09171928836 - MWPTD</li>
+                  <li className="break-all">📞 09171354195 - WRSD</li>
                 </ul>
               </div>
             </div>
@@ -843,9 +239,9 @@ export default function Home() {
       <Footer />
 
       {/* ✅ Mount Modals */}
-      <ClientInfoModal
-        isModalOpen={isModalOpen}
-        setIsModalOpen={setIsModalOpen}
+      <AddClientModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
         onSuccess={handleFormSuccess}
       />
       <SurveyModal

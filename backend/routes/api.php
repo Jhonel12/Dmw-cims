@@ -35,11 +35,11 @@ Route::middleware('auth:sanctum')->prefix('auth')->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
     Route::post('/refresh', [AuthController::class, 'refresh']);
 });
-
+Route::post('/clients', [ClientController::class, 'store']);
 // Client routes (protected)
 Route::middleware('auth:sanctum')->prefix('clients')->group(function () {
     Route::get('/', [ClientController::class, 'index']);                    // GET /api/clients
-    Route::post('/', [ClientController::class, 'store']);                  // POST /api/clients
+               // POST /api/clients
     Route::get('/stats', [ClientController::class, 'stats']);              // GET /api/clients/stats
     Route::get('/trashed', [ClientController::class, 'trashed']);          // GET /api/clients/trashed
     Route::get('/{id}', [ClientController::class, 'show']);                // GET /api/clients/{id}

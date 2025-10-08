@@ -198,13 +198,6 @@ const SurveyList: React.FC = () => {
     setSelectedResponse(null);
   };
 
-  const handleExportResponse = (response: SurveyResponse) => {
-    // TODO: Implement export functionality
-    console.log('Export response:', response);
-    showToast({ title: `Exporting response ${response.control_no}`, type: 'info' });
-  };
-
-
   return (
     <div className="space-y-4">
       {/* Page Header */}
@@ -292,7 +285,6 @@ const SurveyList: React.FC = () => {
       <SurveyResponseTable
         data={surveyResponses}
         onView={handleViewResponse}
-        onExport={handleExportResponse}
         isLoading={isLoading}
         isInitialLoading={isInitialLoading && surveyResponses.length === 0}
       />

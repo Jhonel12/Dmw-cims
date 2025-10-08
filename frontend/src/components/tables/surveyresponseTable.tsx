@@ -32,7 +32,6 @@ export interface SurveyResponse {
 interface SurveyResponseTableProps {
   data: SurveyResponse[];
   onView: (response: SurveyResponse) => void;
-  onExport?: (response: SurveyResponse) => void;
   onRefresh?: () => void;
   isLoading?: boolean;
   isInitialLoading?: boolean;
@@ -41,7 +40,6 @@ interface SurveyResponseTableProps {
 const SurveyResponseTable: React.FC<SurveyResponseTableProps> = ({ 
   data, 
   onView, 
-  onExport,
   onRefresh,
   isLoading = false,
   isInitialLoading = false

@@ -138,7 +138,7 @@ class CustomerFeedbackService {
   async getSurveyResponse(id: number): Promise<{ data: SurveyResponse }> {
     try {
       const response = await apiClient.get<SurveyResponse>(`${this.baseUrl}/${id}`);
-      return { data: response.data };
+      return { data: response };
     } catch (error) {
       console.error('Error fetching survey response:', error);
       throw error;
@@ -173,8 +173,8 @@ class CustomerFeedbackService {
    */
   async submitSurveyResponse(data: Omit<SurveyResponse, 'id' | 'created_at' | 'updated_at'>): Promise<{ data: SurveyResponse }> {
     try {
-      const response = await apiClient.post<{ data: SurveyResponse }>(this.baseUrl, data);
-      return response.data;
+      const response = await apiClient.post<SurveyResponse>(this.baseUrl, data);
+      return { data: response };
     } catch (error) {
       console.error('Error submitting survey response:', error);
       throw error;
@@ -187,7 +187,7 @@ class CustomerFeedbackService {
   async updateSurveyResponse(id: number, data: Partial<SurveyResponse>): Promise<{ data: SurveyResponse }> {
     try {
       const response = await apiClient.put<SurveyResponse>(`${this.baseUrl}/${id}`, data);
-      return { data: response.data };
+      return { data: response };
     } catch (error) {
       console.error('Error updating survey response:', error);
       throw error;
@@ -200,7 +200,7 @@ class CustomerFeedbackService {
   async deleteSurveyResponse(id: number): Promise<{ message: string }> {
     try {
       const response = await apiClient.delete<{ message: string }>(`${this.baseUrl}/${id}`);
-      return response.data;
+      return response;
     } catch (error) {
       console.error('Error deleting survey response:', error);
       throw error;
@@ -222,7 +222,7 @@ class CustomerFeedbackService {
       const response = await apiClient.get<Blob>(`${this.baseUrl}/export?${params.toString()}`, {
         responseType: 'blob'
       });
-      return response.data;
+      return response;
     } catch (error) {
       console.error('Error exporting survey responses:', error);
       throw error;
@@ -239,8 +239,8 @@ class CustomerFeedbackService {
     format?: 'pdf' | 'excel';
   }): Promise<{ data: SurveyReport }> {
     try {
-      const response = await apiClient.post<{ data: SurveyReport }>(`${this.baseUrl}/reports`, reportData);
-      return { data: response.data.data };
+      const response = await apiClient.post<SurveyReport>(`${this.baseUrl}/reports`, reportData);
+      return { data: response };
     } catch (error) {
       console.error('Error generating report:', error);
       throw error;
@@ -252,8 +252,8 @@ class CustomerFeedbackService {
    */
   async getReports(): Promise<{ data: SurveyReport[] }> {
     try {
-      const response = await apiClient.get<{ data: SurveyReport[] }>(`${this.baseUrl}/reports`);
-      return { data: response.data.data };
+      const response = await apiClient.get<SurveyReport[]>(`${this.baseUrl}/reports`);
+      return { data: response };
     } catch (error) {
       console.error('Error fetching reports:', error);
       throw error;
@@ -268,7 +268,7 @@ class CustomerFeedbackService {
       const response = await apiClient.get<Blob>(`${this.baseUrl}/reports/${reportId}/download`, {
         responseType: 'blob'
       });
-      return response.data;
+      return response;
     } catch (error) {
       console.error('Error downloading report:', error);
       throw error;
@@ -280,8 +280,8 @@ class CustomerFeedbackService {
    */
   async getSatisfactionTrends(period: 'week' | 'month' | 'quarter' | 'year' = 'month'): Promise<{ data: any[] }> {
     try {
-      const response = await apiClient.get<{ data: any[] }>(`${this.baseUrl}/trends?period=${period}`);
-      return { data: response.data.data };
+      const response = await apiClient.get<any[]>(`${this.baseUrl}/trends?period=${period}`);
+      return { data: response };
     } catch (error) {
       console.error('Error fetching satisfaction trends:', error);
       throw error;
@@ -320,7 +320,7 @@ class CustomerFeedbackService {
   async bulkDeleteSurveyResponses(ids: number[]): Promise<{ message: string; deleted_count: number }> {
     try {
       const response = await apiClient.post<{ message: string; deleted_count: number }>(`${this.baseUrl}/bulk-delete`, { ids });
-      return response.data;
+      return response;
     } catch (error) {
       console.error('Error bulk deleting survey responses:', error);
       throw error;
@@ -332,8 +332,8 @@ class CustomerFeedbackService {
    */
   async getSurveyResponseByControlNo(controlNo: string): Promise<{ data: SurveyResponse }> {
     try {
-      const response = await apiClient.get<{ data: SurveyResponse }>(`${this.baseUrl}/control-no/${controlNo}`);
-      return { data: response.data.data };
+      const response = await apiClient.get<SurveyResponse>(`${this.baseUrl}/control-no/${controlNo}`);
+      return { data: response };
     } catch (error) {
       console.error('Error fetching survey response by control number:', error);
       throw error;

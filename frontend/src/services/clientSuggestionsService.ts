@@ -211,7 +211,6 @@ class ClientSuggestionsService {
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
     let yPosition = 60; // Increased to make room for larger image
-    const lineHeight = 7;
     const margin = 20;
 
     // More robust data checking

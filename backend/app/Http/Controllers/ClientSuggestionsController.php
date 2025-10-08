@@ -73,8 +73,6 @@ class ClientSuggestionsController extends Controller
                     'suggestions' => $suggestion->suggestions ?? '',
                     'email' => $suggestion->email,
                     'date' => $suggestion->date,
-                    'created_at' => $suggestion->created_at,
-                    'updated_at' => $suggestion->updated_at,
                     'client_channel' => $suggestion->client_channel ?? 'N/A'
                 ];
             });
@@ -133,8 +131,6 @@ class ClientSuggestionsController extends Controller
                 'suggestions' => $suggestion->suggestions ?? '',
                 'email' => $suggestion->email,
                 'date' => $suggestion->date,
-                'created_at' => $suggestion->created_at,
-                'updated_at' => $suggestion->updated_at,
                 'client_channel' => $suggestion->client_channel ?? 'N/A'
             ];
 

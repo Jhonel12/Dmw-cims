@@ -51,7 +51,7 @@ export default function Home() {
       <Header />
 
       {/* Add some top padding so content sits below header - responsive padding */}
-      <main className="flex-1 relative z-10 container mx-auto px-3 sm:px-4 md:px-6 pt-24 sm:pt-28 md:pt-32 lg:pt-36 pb-16 sm:pb-20 md:pb-24">
+      <main className="flex-1 relative z-10 container mx-auto px-3 sm:px-4 md:px-6 pt-32 sm:pt-36 md:pt-40 lg:pt-44 pb-16 sm:pb-20 md:pb-24">
         {/* Grid: center content spans 2 columns on large screens, right column is 1 */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8 items-start">
           {/* ---------- CENTER SURVEY CARD (spans 2 cols on large) ---------- */}
@@ -114,7 +114,7 @@ export default function Home() {
 
               {/* Official Facebook */}
               <a
-                href="https://www.facebook.com/dmw.gov.ph"
+                href="https://www.facebook.com/DWMROX"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="block w-full h-full"

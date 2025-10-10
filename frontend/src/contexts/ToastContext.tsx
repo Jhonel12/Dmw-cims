@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useState, type ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import Toast from '../components/ui/Toast';
 import type { Toast as ToastType, ToastContextType } from '../types/toast';
+import { listenForGlobalToasts } from '../utils/globalToast';
 
 const ToastContext = createContext<ToastContextType | undefined>(undefined);
 
@@ -14,6 +15,14 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
   const generateId = () => {
     return Math.random().toString(36).substr(2, 9);
   };
+
+  // Listen for global toast events (from non-React contexts)
+  useEffect(() => {
+    const cleanup = listenForGlobalToasts((type, title, message) => {
+      showToast({ type, title, message });
+    });
+    return cleanup;
+  }, []);
 
   const showToast = (toast: Omit<ToastType, 'id'>): string => {
     const id = generateId();

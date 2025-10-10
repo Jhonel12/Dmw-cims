@@ -48,7 +48,28 @@ class ApiClient {
       (response) => response, // ✅ Remove 'any' type
       async (error) => { // ✅ Remove 'any' type
         if (error.response?.status === 401) {
-          console.log('401 Unauthorized - token may be expired');
+          const errorCode = error.response?.data?.code;
+          const errorMessage = error.response?.data?.message;
+          
+          console.log('401 Unauthorized:', errorMessage || 'token may be expired');
+          
+          // Store the reason for redirect to show on login page
+          if (errorCode === 'SESSION_EXPIRED') {
+            console.log('Session expired due to inactivity - redirecting to login');
+            sessionStorage.setItem('loginMessage', JSON.stringify({
+              type: 'warning',
+              title: 'Session Expired',
+              message: 'Your session has expired due to inactivity. Please log in again.'
+            }));
+          } else {
+            // Generic authentication error
+            sessionStorage.setItem('loginMessage', JSON.stringify({
+              type: 'error',
+              title: 'Authentication Required',
+              message: 'Your session has ended. Please log in again.'
+            }));
+          }
+          
           this.clearToken();
           clearAuthCookies();
           this.redirectToLogin();

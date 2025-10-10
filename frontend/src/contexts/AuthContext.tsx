@@ -151,8 +151,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         // Set loading to false after initialization
         dispatch({ type: 'SET_LOADING', payload: false });
         
-        // Optionally verify token in background (non-blocking)
+        // Verify token in background (non-blocking)
+        console.log('🔍 Starting background token verification...');
         userService.getCurrentUser().then(response => {
+          console.log('✅ Token verification successful:', response);
           if (response.success && response.data) {
             // Update with fresh data if available
             const currentToken = response.data.token || storedToken;
@@ -167,8 +169,29 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             apiClient.setToken(currentToken);
           }
         }).catch(error => {
-          console.error('Background token verification failed:', error);
-          // Don't clear auth state on background verification failure
+          console.error('❌ Background token verification failed:', error);
+          console.error('❌ Error response:', error.response);
+          console.error('❌ Error status:', error.response?.status);
+          console.error('❌ Error data:', error.response?.data);
+          
+          // Check if it's a session expiration (401 error)
+          if (error.response?.status === 401) {
+            console.log('🚪 Session expired - logging out user');
+            
+            const errorCode = error.response?.data?.code;
+            
+            // Show notification (will be caught by api-client interceptor too, but good to have here as backup)
+            if (errorCode === 'SESSION_EXPIRED') {
+              console.log('Session expired due to inactivity');
+              // Note: The toast will be shown by api-client interceptor
+            }
+            
+            // Clear auth state on session expiration
+            dispatch({ type: 'LOGOUT' });
+            // apiClient will handle cookie clearing, toast notification, and redirect via interceptor
+          } else {
+            console.log('⚠️ Non-401 error - keeping user logged in');
+          }
         });
       } else {
         // No token, user is not authenticated

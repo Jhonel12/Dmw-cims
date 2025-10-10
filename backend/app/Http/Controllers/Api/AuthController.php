@@ -78,7 +78,8 @@ class AuthController extends Controller
         try {
             $validator = Validator::make($request->all(), [
                 'email' => 'required|email',
-                'password' => 'required|string'
+                'password' => 'required|string',
+                'remember' => 'sometimes|boolean'
             ]);
 
             if ($validator->fails()) {
@@ -97,7 +98,10 @@ class AuthController extends Controller
             }
 
             $user = Auth::user();
-            $token = $user->createToken('auth_token')->plainTextToken;
+            $rememberMe = $request->boolean('remember', false);
+            
+            // Create token with abilities to track remember me status
+            $token = $user->createToken('auth_token', [$rememberMe ? 'remember' : 'normal'])->plainTextToken;
 
             return response()->json([
                 'success' => true,
@@ -264,5 +268,38 @@ class AuthController extends Controller
             'success' => true,
             'message' => 'Password is valid'
         ]);
+    }
+
+    /**
+     * Check if token is valid (doesn't update activity)
+     * Use this for periodic token validation without extending session
+     */
+    public function checkToken(Request $request): JsonResponse
+    {
+        try {
+            $user = $request->user();
+
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Token is invalid or expired'
+                ], 401);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Token is valid',
+                'data' => [
+                    'valid' => true
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Token validation failed',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }

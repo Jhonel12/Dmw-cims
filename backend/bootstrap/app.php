@@ -24,6 +24,11 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->api(prepend: [
             \Illuminate\Http\Middleware\HandleCors::class,
         ]);
+        
+        // Add idle timeout middleware
+        $middleware->alias([
+            'check.token.activity' => \App\Http\Middleware\CheckTokenActivity::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

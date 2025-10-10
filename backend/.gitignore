@@ -21,3 +21,7 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+
+# Environment-specific config files (EC2 has custom settings)
+/config/cors.php
+/config/app.php

@@ -29,15 +29,20 @@ Route::prefix('auth')->group(function () {
     Route::post('/validate-password', [AuthController::class, 'validatePassword']);
 });
 
-// Protected authentication routes
+// Token validation route (doesn't update activity timer)
 Route::middleware('auth:sanctum')->prefix('auth')->group(function () {
+    Route::get('/check', [AuthController::class, 'checkToken']);
+});
+
+// Protected authentication routes
+Route::middleware(['auth:sanctum', 'check.token.activity'])->prefix('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
     Route::post('/refresh', [AuthController::class, 'refresh']);
 });
 Route::post('/clients', [ClientController::class, 'store']);
 // Client routes (protected)
-Route::middleware('auth:sanctum')->prefix('clients')->group(function () {
+Route::middleware(['auth:sanctum', 'check.token.activity'])->prefix('clients')->group(function () {
     Route::get('/', [ClientController::class, 'index']);                    // GET /api/clients
                // POST /api/clients
     Route::get('/stats', [ClientController::class, 'stats']);              // GET /api/clients/stats
@@ -50,7 +55,7 @@ Route::middleware('auth:sanctum')->prefix('clients')->group(function () {
 });
 
 // OFW routes (protected)
-Route::middleware('auth:sanctum')->prefix('ofw')->group(function () {
+Route::middleware(['auth:sanctum', 'check.token.activity'])->prefix('ofw')->group(function () {
     Route::get('/', [OFWController::class, 'index']);                      // GET /api/ofw
     Route::post('/', [OFWController::class, 'store']);                     // POST /api/ofw
     Route::get('/statistics', [OFWController::class, 'statistics']);       // GET /api/ofw/statistics
@@ -67,7 +72,7 @@ Route::middleware('auth:sanctum')->prefix('ofw')->group(function () {
 });
 
 // User management routes (protected)
-Route::middleware('auth:sanctum')->prefix('users')->group(function () {
+Route::middleware(['auth:sanctum', 'check.token.activity'])->prefix('users')->group(function () {
     Route::get('/', [UserController::class, 'getUsers']);                  // GET /api/users
     Route::get('/stats', [UserController::class, 'getUserStats']);         // GET /api/users/stats
     Route::post('/', [UserController::class, 'createUser']);               // POST /api/users
@@ -82,14 +87,14 @@ Route::middleware('auth:sanctum')->prefix('users')->group(function () {
 Route::post('/customer-feedback', [CustomerFeedbackController::class, 'store']); // Public - for form submission
 
 // Protected customer feedback routes (admin only)
-Route::middleware('auth:sanctum')->prefix('customer-feedback')->group(function () {
+Route::middleware(['auth:sanctum', 'check.token.activity'])->prefix('customer-feedback')->group(function () {
     Route::get('/', [CustomerFeedbackController::class, 'index']);
     Route::get('/list', [CustomerFeedbackController::class, 'getSurveyList']);
     Route::get('/statistics', [CustomerFeedbackController::class, 'statistics']);
 });
 
 // Survey Analytics routes (protected)
-Route::middleware('auth:sanctum')->prefix('survey-analytics')->group(function () {
+Route::middleware(['auth:sanctum', 'check.token.activity'])->prefix('survey-analytics')->group(function () {
     Route::get('/', [SurveyAnalyticsController::class, 'getAnalytics']);                    // GET /api/survey-analytics
     Route::get('/satisfaction-by-service', [SurveyAnalyticsController::class, 'getSatisfactionByService']); // GET /api/survey-analytics/satisfaction-by-service
     Route::get('/trends', [SurveyAnalyticsController::class, 'getSatisfactionTrends']);     // GET /api/survey-analytics/trends
@@ -98,7 +103,7 @@ Route::middleware('auth:sanctum')->prefix('survey-analytics')->group(function ()
 });
 
 // Survey Reports routes (protected)
-Route::middleware('auth:sanctum')->prefix('survey-reports')->group(function () {
+Route::middleware(['auth:sanctum', 'check.token.activity'])->prefix('survey-reports')->group(function () {
     Route::get('/', [SurveyReportsController::class, 'index']);                             // GET /api/survey-reports
     Route::post('/generate', [SurveyReportsController::class, 'generateReport']);          // POST /api/survey-reports/generate
     Route::get('/download/{reportId}', [SurveyReportsController::class, 'downloadReport']); // GET /api/survey-reports/download/{reportId}
@@ -108,7 +113,7 @@ Route::middleware('auth:sanctum')->prefix('survey-reports')->group(function () {
 });
 
 // Client Suggestions routes (protected)
-Route::middleware('auth:sanctum')->prefix('client-suggestions')->group(function () {
+Route::middleware(['auth:sanctum', 'check.token.activity'])->prefix('client-suggestions')->group(function () {
     Route::get('/', [App\Http\Controllers\ClientSuggestionsController::class, 'index']);              // GET /api/client-suggestions
     Route::get('/{id}', [App\Http\Controllers\ClientSuggestionsController::class, 'show']);           // GET /api/client-suggestions/{id}
     Route::get('/statistics', [App\Http\Controllers\ClientSuggestionsController::class, 'getStatistics']); // GET /api/client-suggestions/statistics

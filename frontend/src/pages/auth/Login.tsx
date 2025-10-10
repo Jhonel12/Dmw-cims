@@ -7,7 +7,7 @@ import type { LoginCredentials } from '../../types/auth';
 const Login: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { showError, showSuccess } = useToast();
+  const { showError, showSuccess, showWarning } = useToast();
   const { login, isLoading, isAuthenticated, user, clearError } = useAuth();
   
   const [formData, setFormData] = useState({
@@ -15,6 +15,7 @@ const Login: React.FC = () => {
     password: ''
   });
   
+  const [rememberMe, setRememberMe] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const hasRedirectedRef = useRef(false);
 
@@ -22,6 +23,37 @@ const Login: React.FC = () => {
   useEffect(() => {
     clearError();
   }, []); // Remove clearError from dependencies to prevent infinite loop
+
+  // Check for session expiration message
+  useEffect(() => {
+    const loginMessage = sessionStorage.getItem('loginMessage');
+    if (loginMessage) {
+      try {
+        const { type, title, message } = JSON.parse(loginMessage);
+        
+        // Show the appropriate toast based on type
+        switch(type) {
+          case 'warning':
+            showWarning(title, message);
+            break;
+          case 'error':
+            showError(title, message);
+            break;
+          case 'success':
+            showSuccess(title, message);
+            break;
+          default:
+            showWarning(title, message);
+        }
+        
+        // Clear the message after showing it
+        sessionStorage.removeItem('loginMessage');
+      } catch (error) {
+        console.error('Error parsing login message:', error);
+        sessionStorage.removeItem('loginMessage');
+      }
+    }
+  }, [showWarning, showError, showSuccess]);
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -66,11 +98,12 @@ const Login: React.FC = () => {
 
     const credentials: LoginCredentials = {
       email: formData.email,
-      password: formData.password
+      password: formData.password,
+      remember: rememberMe
     };
 
     try {
-      console.log('Attempting login with credentials:', credentials);
+      console.log('Attempting login with credentials:', credentials, 'Remember me:', rememberMe);
       await login(credentials);
       console.log('Login successful, current auth state:', { isAuthenticated, user });
       showSuccess('Login Successful', 'Welcome back! Redirecting to dashboard...');
@@ -183,12 +216,15 @@ const Login: React.FC = () => {
 
             {/* Remember Me & Forgot Password */}
             <div className="flex items-center justify-between">
-              <label className="flex items-center">
+              <label className="flex items-center cursor-pointer">
                 <input
                   type="checkbox"
-                  className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 cursor-pointer"
+                  disabled={isLoading}
                 />
-                <span className="ml-2 text-sm text-gray-600">Remember me</span>
+                <span className="ml-2 text-sm text-gray-600">Remember me for 30 days</span>
               </label>
               <button
                 type="button"

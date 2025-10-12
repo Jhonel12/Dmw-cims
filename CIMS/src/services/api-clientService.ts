@@ -1,6 +1,7 @@
-import axios, { type AxiosInstance, type AxiosResponse } from 'axios';
+import axios, { type AxiosInstance, type AxiosResponse } from "axios";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://goalhub.site/api';
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL || "https://dmw.goalhub.site/api";
 
 interface ApiResponse<T = any> {
   success: boolean;
@@ -16,8 +17,8 @@ class ApiClientService {
     this.axiosInstance = axios.create({
       baseURL,
       headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
+        "Content-Type": "application/json",
+        Accept: "application/json",
       },
       timeout: 10000,
     });
@@ -25,7 +26,9 @@ class ApiClientService {
     // Request interceptor
     this.axiosInstance.interceptors.request.use(
       (config) => {
-        console.log(`Making ${config.method?.toUpperCase()} request to: ${config.url}`);
+        console.log(
+          `Making ${config.method?.toUpperCase()} request to: ${config.url}`
+        );
         return config;
       },
       (error) => {
@@ -39,14 +42,14 @@ class ApiClientService {
         return response;
       },
       (error) => {
-        console.error('API request failed:', error);
+        console.error("API request failed:", error);
         return Promise.reject(error);
       }
     );
   }
 
   private async request<T>(
-    method: 'GET' | 'POST' | 'PUT' | 'DELETE',
+    method: "GET" | "POST" | "PUT" | "DELETE",
     endpoint: string,
     data?: any
   ): Promise<ApiResponse<T>> {
@@ -60,35 +63,38 @@ class ApiClientService {
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        const message = error.response?.data?.message || error.message || 'An unexpected error occurred';
+        const message =
+          error.response?.data?.message ||
+          error.message ||
+          "An unexpected error occurred";
         return {
           success: false,
           message,
           error: error.response?.data?.error,
         };
       }
-      
+
       return {
         success: false,
-        message: 'An unexpected error occurred',
+        message: "An unexpected error occurred",
       };
     }
   }
 
   async get<T>(endpoint: string): Promise<ApiResponse<T>> {
-    return this.request<T>('GET', endpoint);
+    return this.request<T>("GET", endpoint);
   }
 
   async post<T>(endpoint: string, data?: any): Promise<ApiResponse<T>> {
-    return this.request<T>('POST', endpoint, data);
+    return this.request<T>("POST", endpoint, data);
   }
 
   async put<T>(endpoint: string, data?: any): Promise<ApiResponse<T>> {
-    return this.request<T>('PUT', endpoint, data);
+    return this.request<T>("PUT", endpoint, data);
   }
 
   async delete<T>(endpoint: string): Promise<ApiResponse<T>> {
-    return this.request<T>('DELETE', endpoint);
+    return this.request<T>("DELETE", endpoint);
   }
 }
 

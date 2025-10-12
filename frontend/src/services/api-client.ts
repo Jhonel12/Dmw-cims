@@ -1,10 +1,9 @@
-import axios from 'axios';
-import { getAuthToken, clearAuthCookies } from '../utils/cookieUtils';
+import axios from "axios";
+import { getAuthToken, clearAuthCookies } from "../utils/cookieUtils";
 
 // API Base URL - adjust this to match your backend URL
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://goalhub.site/api';
-
-
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL || "https://dmw.goalhub.site/api";
 
 class ApiClient {
   private axiosInstance: ReturnType<typeof axios.create>;
@@ -14,12 +13,11 @@ class ApiClient {
     this.axiosInstance = axios.create({
       baseURL: API_BASE_URL,
       headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
+        "Content-Type": "application/json",
+        Accept: "application/json",
       },
       timeout: 10000, // 10 seconds timeout
       withCredentials: true, // ✅ ADD THIS - Important for Laravel Sanctum/cookies
-
     });
 
     this.setupInterceptors();
@@ -29,16 +27,18 @@ class ApiClient {
   private setupInterceptors(): void {
     // Request interceptor to add auth token
     this.axiosInstance.interceptors.request.use(
-      (config) => { // ✅ Remove 'any' type
+      (config) => {
+        // ✅ Remove 'any' type
         this.refreshTokenFromStorage();
-        
+
         if (this.token) {
           config.headers = config.headers || {};
           config.headers.Authorization = `Bearer ${this.token}`;
         }
         return config;
       },
-      (error) => { // ✅ Remove 'any' type
+      (error) => {
+        // ✅ Remove 'any' type
         return Promise.reject(error);
       }
     );
@@ -46,30 +46,43 @@ class ApiClient {
     // Response interceptor for error handling
     this.axiosInstance.interceptors.response.use(
       (response) => response, // ✅ Remove 'any' type
-      async (error) => { // ✅ Remove 'any' type
+      async (error) => {
+        // ✅ Remove 'any' type
         if (error.response?.status === 401) {
           const errorCode = error.response?.data?.code;
           const errorMessage = error.response?.data?.message;
-          
-          console.log('401 Unauthorized:', errorMessage || 'token may be expired');
-          
+
+          console.log(
+            "401 Unauthorized:",
+            errorMessage || "token may be expired"
+          );
+
           // Store the reason for redirect to show on login page
-          if (errorCode === 'SESSION_EXPIRED') {
-            console.log('Session expired due to inactivity - redirecting to login');
-            sessionStorage.setItem('loginMessage', JSON.stringify({
-              type: 'warning',
-              title: 'Session Expired',
-              message: 'Your session has expired due to inactivity. Please log in again.'
-            }));
+          if (errorCode === "SESSION_EXPIRED") {
+            console.log(
+              "Session expired due to inactivity - redirecting to login"
+            );
+            sessionStorage.setItem(
+              "loginMessage",
+              JSON.stringify({
+                type: "warning",
+                title: "Session Expired",
+                message:
+                  "Your session has expired due to inactivity. Please log in again.",
+              })
+            );
           } else {
             // Generic authentication error
-            sessionStorage.setItem('loginMessage', JSON.stringify({
-              type: 'error',
-              title: 'Authentication Required',
-              message: 'Your session has ended. Please log in again.'
-            }));
+            sessionStorage.setItem(
+              "loginMessage",
+              JSON.stringify({
+                type: "error",
+                title: "Authentication Required",
+                message: "Your session has ended. Please log in again.",
+              })
+            );
           }
-          
+
           this.clearToken();
           clearAuthCookies();
           this.redirectToLogin();
@@ -82,7 +95,7 @@ class ApiClient {
   private loadTokenFromStorage(): void {
     const storedToken = getAuthToken();
     this.token = storedToken || null;
-    console.log('Loaded token from storage:', !!this.token);
+    console.log("Loaded token from storage:", !!this.token);
   }
 
   // Refresh token from storage (useful when token is updated elsewhere)
@@ -93,43 +106,43 @@ class ApiClient {
   private redirectToLogin(): void {
     // Clear any stored data
     clearAuthCookies();
-    
+
     // Redirect to login page
-    if (window.location.pathname !== '/login') {
-      window.location.href = '/login';
+    if (window.location.pathname !== "/login") {
+      window.location.href = "/login";
     }
   }
 
   // Set authentication token
   setToken(token: string): void {
     this.token = token;
-    console.log('Token set in API client:', !!token);
+    console.log("Token set in API client:", !!token);
     // Token is already set in cookies by UserService
   }
 
   // Clear authentication token
   clearToken(): void {
     this.token = null;
-    console.log('Token cleared from API client');
+    console.log("Token cleared from API client");
     // Cookies are cleared by UserService
   }
 
   // Logout and destroy session
   async logout(): Promise<void> {
     try {
-      console.log('API Client: Calling logout endpoint...');
+      console.log("API Client: Calling logout endpoint...");
       // Call logout endpoint to destroy session on server
-      await this.post('/auth/logout');
-      console.log('API Client: Logout endpoint called successfully');
+      await this.post("/auth/logout");
+      console.log("API Client: Logout endpoint called successfully");
     } catch (error) {
-      console.error('Logout API call failed:', error);
+      console.error("Logout API call failed:", error);
       // Continue with local cleanup even if API call fails
     } finally {
-      console.log('API Client: Clearing local data...');
+      console.log("API Client: Clearing local data...");
       // Always clear local data
       this.clearToken();
       clearAuthCookies();
-      console.log('API Client: Local data cleared');
+      console.log("API Client: Local data cleared");
     }
   }
 
@@ -154,12 +167,12 @@ class ApiClient {
   // Generic GET request
   async get<T>(url: string, config?: any): Promise<T> {
     try {
-      console.log('API Client GET:', url);
-      console.log('Current token:', this.token ? 'exists' : 'missing');
+      console.log("API Client GET:", url);
+      console.log("Current token:", this.token ? "exists" : "missing");
       const response = await this.axiosInstance.get<T>(url, config);
       return response.data;
     } catch (error) {
-      console.error('API Client GET error:', error);
+      console.error("API Client GET error:", error);
       this.handleError(error);
     }
   }
@@ -206,22 +219,24 @@ class ApiClient {
 
   // Upload file with progress
   async uploadFile<T>(
-    url: string, 
-    file: File, 
+    url: string,
+    file: File,
     onProgress?: (progress: number) => void
   ): Promise<T> {
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append("file", file);
 
     try {
       const response = await this.axiosInstance.post<T>(url, formData, {
         headers: {
-          'Content-Type': 'multipart/form-data',
+          "Content-Type": "multipart/form-data",
         },
         // @ts-ignore - onUploadProgress is a valid axios option
         onUploadProgress: (progressEvent: any) => {
           if (onProgress && progressEvent.total) {
-            const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+            const progress = Math.round(
+              (progressEvent.loaded * 100) / progressEvent.total
+            );
             onProgress(progress);
           }
         },
@@ -237,31 +252,34 @@ class ApiClient {
     if (error.response) {
       // Server responded with error status
       const responseData = error.response.data as any;
-      let message = 'An error occurred';
-      
+      let message = "An error occurred";
+
       if (responseData?.message) {
         message = responseData.message;
       } else if (responseData?.errors) {
         // Handle validation errors
         const errorMessages = Object.values(responseData.errors).flat();
-        message = errorMessages.join(', ');
+        message = errorMessages.join(", ");
       } else if (error.response.status === 401) {
-        message = 'Authentication required. Please log in again.';
+        message = "Authentication required. Please log in again.";
       } else if (error.response.status === 403) {
-        message = 'Access denied. You do not have permission to perform this action.';
+        message =
+          "Access denied. You do not have permission to perform this action.";
       } else if (error.response.status === 404) {
-        message = 'The requested resource was not found.';
+        message = "The requested resource was not found.";
       } else if (error.response.status >= 500) {
-        message = 'Server error. Please try again later.';
+        message = "Server error. Please try again later.";
       }
-      
+
       throw new Error(message);
     } else if (error.request) {
       // Request was made but no response received
-      throw new Error('Network error. Please check your connection and try again.');
+      throw new Error(
+        "Network error. Please check your connection and try again."
+      );
     } else {
       // Something else happened
-      throw new Error(error.message || 'An unexpected error occurred');
+      throw new Error(error.message || "An unexpected error occurred");
     }
   }
 
